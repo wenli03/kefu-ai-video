@@ -1,0 +1,11 @@
+{
+  "name": "ai-video-cs",
+  "version": "1.0.0",
+  "description": "AI Insurance Video Customer Service",
+  "main": "deploy-server.js",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node deploy-server.js",
+    "build": "cd web && npx vite build"
+  }
+}

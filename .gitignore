@@ -1,0 +1,10 @@
+node_modules/
+dist/
+data/
+*.class
+target/
+.env
+.DS_Store
+.superpowers/
+
+services/SadTalker/

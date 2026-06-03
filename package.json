@@ -1,0 +1,26 @@
+{
+  "name": "kefu-ai-video",
+  "private": true,
+  "workspaces": [
+    "services/ai-video-platform",
+    "services/ai-pipeline",
+    "web"
+  ],
+  "scripts": {
+    "dev:video": "npm -w services/ai-video-platform run dev",
+    "dev:pipeline": "npm -w services/ai-pipeline run dev",
+    "dev:web": "npm -w web run dev",
+    "dev": "concurrently \"npm run dev:video\" \"npm run dev:pipeline\" \"npm run dev:web\"",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "typescript": "^5.4.0"
+  },
+  "dependencies": {
+    "@types/three": "^0.184.1",
+    "node-media-server": "^4.2.4",
+    "three": "^0.184.0"
+  }
+}

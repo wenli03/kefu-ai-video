@@ -1,0 +1,93 @@
+.admin-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px;
+  width: 100%;
+}
+.admin-page h2 {
+  font-size: 22px;
+  color: #1a1a2e;
+}
+.admin-subtitle {
+  color: #666;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  padding: 20px 16px;
+  border-radius: 8px;
+  text-align: center;
+  color: #fff;
+}
+.stat-card.blue { background: linear-gradient(135deg, #42a5f5, #1976d2); }
+.stat-card.green { background: linear-gradient(135deg, #66bb6a, #388e3c); }
+.stat-card.orange { background: linear-gradient(135deg, #ffa726, #f57c00); }
+.stat-card.purple { background: linear-gradient(135deg, #ab47bc, #7b1fa2); }
+.stat-value {
+  font-size: 36px;
+  font-weight: 700;
+}
+.stat-label {
+  font-size: 13px;
+  opacity: 0.9;
+}
+.tech-metrics {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+.tech-metrics h3 {
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+.metric-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.metric-table td {
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13px;
+}
+.metric-good {
+  color: #4caf50;
+  font-weight: 600;
+  text-align: right;
+}
+.log-panel {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+.log-panel h3 {
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+.log-list {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+.log-item {
+  font-size: 12px;
+  font-family: monospace;
+  color: #555;
+  padding: 4px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+.refresh-btn {
+  padding: 6px 16px;
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
