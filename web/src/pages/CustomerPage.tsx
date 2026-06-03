@@ -143,7 +143,7 @@ export function CustomerPage() {
 
     const resetSilenceTimer = () => {
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-      silenceTimerRef.current = setTimeout(sendAccumulated, 500);
+      silenceTimerRef.current = setTimeout(sendAccumulated, 200);
     };
 
     recognition.onresult = (event: any) => {

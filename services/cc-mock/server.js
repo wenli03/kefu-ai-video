@@ -2,9 +2,7 @@
 const http = require('http');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
-const { execSync } = require('child_process');
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 
 const WS_MAGIC = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
@@ -50,24 +48,30 @@ function getVideo(text) {
   return '/avatar-videos/greeting.webm';
 }
 
-function tts(text) {
-  try {
-    const tmp = os.tmpdir() + '\\tts-' + Date.now() + '.mp3';
-    execSync(`python -m edge_tts --voice "zh-CN-XiaoxiaoNeural" --text "${text.replace(/"/g,'\\"')}" --write-media "${tmp}"`, { stdio: 'pipe', timeout: 15000, windowsHide: true });
-    const data = fs.readFileSync(tmp);
-    try { fs.unlinkSync(tmp); } catch {}
-    return data.toString('base64');
-  } catch(e) { console.log('[CC] TTS error:', e.message); return null; }
-}
+// ===== Static TTS audio cache (no edge_tts/Python needed) =====
+const answerToAudio = {
+  '您好！我可以解答：投保流程、理赔流程、退保规则、续保政策。请问您想了解哪方面？': 'greeting.mp3',
+  '理赔流程：1.拨打95511报案 2.准备身份证/保单/医疗记录 3.提交审核（3-5个工作日）4.赔付到账。': 'claim.mp3',
+  '退保规则：投保后10天犹豫期内可全额退款。超过犹豫期按现金价值返还。需准备保单、身份证、银行卡办理。': 'refund.mp3',
+  '续保政策：保障到期前30天可办理续保，无需重新核保，按原费率或调整后费率计算。': 'renewal.mp3',
+  '投保流程：1.选择产品（寿险/健康险/意外险/车险）2.填写信息 3.健康告知 4.支付保费 5.生效。24小时在线投保。': 'insurance.mp3',
+  '再见！感谢您的咨询，如有需要随时联系我，祝您生活愉快！': 'goodbye.mp3',
+};
 
-function ttsWithWords(text) {
-  try {
-    // Use the advanced TTS script that returns audio + word timing + visemes
-    const script = path.resolve(__dirname, '..', 'tts', 'tts_cli.py');
-    const escaped = text.replace(/"/g, '\\"').replace(/\r?\n/g, ' ');
-    const result = execSync(`python "${script}" "${escaped}"`, { encoding: 'utf-8', timeout: 30000, windowsHide: true });
-    return JSON.parse(result.trim());
-  } catch(e) { console.log('[CC] TTS+Words error:', e.message); return null; }
+const ttsCache = new Map();
+
+function loadAudioCache() {
+  const AUDIO_DIR = path.join(__dirname, '..', '..', 'web', 'public', 'audio');
+  let count = 0;
+  for (const [answerText, audioFile] of Object.entries(answerToAudio)) {
+    const audioPath = path.join(AUDIO_DIR, audioFile);
+    try {
+      const audioData = fs.readFileSync(audioPath);
+      ttsCache.set(answerText, { audio: audioData.toString('base64'), words: [], format: 'mp3' });
+      count++;
+    } catch(e) { console.log(`[CC] Audio missing: ${audioFile}`); }
+  }
+  console.log(`[CC] Static TTS cache: ${count}/${Object.keys(answerToAudio).length} entries`);
 }
 
 function parseWSUrl(url) {
@@ -155,11 +159,8 @@ async function handleMessage(ws, rawMsg, role) {
       if (cached) {
         sendWS(ws, {type:'tts-audio', audio:cached.audio, words:cached.words||[], format:'mp3', sid:msg.sid});
       } else {
-        const ttsData = ttsWithWords(answer);
-        if (ttsData && ttsData.audio) {
-          if (server._ttsCache) server._ttsCache.set(answer, ttsData);
-          sendWS(ws, {type:'tts-audio', audio:ttsData.audio, words:ttsData.words||[], format:'mp3', sid:msg.sid});
-        }
+        // Fallback: just send answer text without audio
+        console.log('[CC] No cached audio for answer');
       }
       sendWS(ws, {type:'video-play', videoPath:video, sid:msg.sid});
       break;
@@ -245,25 +246,7 @@ server.listen(PORT, () => {
   console.log(`[Mock CC System] ws://localhost:${PORT}/ws/cc`);
   console.log(`[Mock CC System] http://localhost:${PORT}/api/cc`);
   
-  // Pre-generate TTS cache for all keyword answers (eliminates 5s+ latency)
-  console.log('[CC] Pre-generating TTS cache...');
-  const cacheTexts = [
-    '理赔流程：1.拨打95511报案 2.准备身份证/保单/医疗记录 3.提交审核（3-5个工作日）4.赔付到账。',
-    '退保规则：投保后10天犹豫期内可全额退款。超过犹豫期按现金价值返还。需准备保单、身份证、银行卡办理。',
-    '续保政策：保障到期前30天可办理续保，无需重新核保，按原费率或调整后费率计算。',
-    '投保流程：1.选择产品（寿险/健康险/意外险/车险）2.填写信息 3.健康告知 4.支付保费 5.生效。24小时在线投保。',
-    '您好！我可以解答：投保流程、理赔流程、退保规则、续保政策。请问您想了解哪方面？',
-    getGoodbyeAnswer()
-  ];
-  const cache = new Map();
-  cacheTexts.forEach(t => {
-    try {
-      const data = ttsWithWords(t);
-      if (data) cache.set(t, data);
-    } catch(_) {}
-  });
-  console.log(`[CC] TTS cache ready: ${cache.size}/${cacheTexts.length} entries`);
-  
-  // Expose cache to handler
-  server._ttsCache = cache;
+  // Load static TTS audio cache (instant, no edge_tts/Python needed)
+  loadAudioCache();
+  server._ttsCache = ttsCache;
 });
