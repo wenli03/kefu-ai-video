@@ -144,8 +144,10 @@
         .main-layout {
             display: grid;
             grid-template-columns: 340px 1fr 280px;
+            grid-template-rows: minmax(0, 1fr);
             gap: 0;
             height: calc(100vh - 48px);
+            overflow: hidden;
         }
 
         /* Video Panel */
@@ -153,6 +155,7 @@
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
+            min-height: 0;
         }
 
         .video-header {
@@ -281,6 +284,32 @@
             100% { transform: scaleY(1); }
         }
 
+        /* CSS 数字人：眨眼 + 说话口型（真实推理回复播出期间持续口型动画） */
+        .dh-face { position: relative; width: 92px; height: 112px; }
+        .dh-hair { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 74px; height: 42px; border-radius: 37px 37px 10px 10px; background: #d9a441; }
+        .dh-head { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: 64px; height: 66px; border-radius: 50% 50% 46% 46%; background: #f2c9a0; overflow: hidden; }
+        .dh-eye { position: absolute; top: 26px; width: 7px; height: 7px; border-radius: 50%; background: #3b3b3b; animation: dh-blink 4.2s infinite; }
+        .dh-eye.left { left: 15px; }
+        .dh-eye.right { right: 15px; }
+        .dh-brow { position: absolute; top: 18px; width: 11px; height: 2px; border-radius: 2px; background: #b98a3a; }
+        .dh-brow.left { left: 13px; }
+        .dh-brow.right { right: 13px; }
+        .dh-mouth { position: absolute; bottom: 13px; left: 50%; transform: translateX(-50%); width: 18px; height: 4px; border-radius: 3px; background: #a85a3f; }
+        .dh-body { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 82px; height: 34px; border-radius: 41px 41px 0 0; background: linear-gradient(180deg, #6366f1, #4f46e5); }
+        .dh-tie { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 10px; height: 18px; background: #e2e8f0; clip-path: polygon(50% 0, 100% 30%, 78% 100%, 22% 100%, 0 30%); }
+        @keyframes dh-blink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.12); } }
+        .dh-face.talking .dh-mouth { animation: dh-talk 0.26s ease-in-out infinite alternate; }
+        @keyframes dh-talk { from { height: 3px; border-radius: 3px; } to { height: 13px; border-radius: 8px 8px 12px 12px; } }
+        .dh-face.talking .dh-head { animation: dh-nod 1.1s ease-in-out infinite; }
+        @keyframes dh-nod { 0%, 100% { transform: translateX(-50%) rotate(0deg); } 50% { transform: translateX(-50%) rotate(1.6deg); } }
+
+        .avatar-status {
+            font-size: 11px;
+            color: var(--accent-light, #818cf8);
+            margin-top: 6px;
+            letter-spacing: 1px;
+        }
+
         .avatar-label {
             text-align: center;
             margin-top: 16px;
@@ -354,6 +383,7 @@
             display: flex;
             flex-direction: column;
             border-right: 1px solid var(--border);
+            min-height: 0;
         }
 
         .chat-header {
@@ -914,6 +944,15 @@
         @media (max-width: 1200px) {
             .main-layout {
                 grid-template-columns: 1fr 1fr;
+                grid-template-rows: none;
+                height: auto;
+                overflow: visible;
+            }
+            .video-container {
+                min-height: 320px;
+            }
+            .chat-messages {
+                max-height: 60vh;
             }
             .sidebar {
                 grid-column: 1 / -1;
@@ -1675,7 +1714,18 @@
                     <div class="avatar-container">
                         <div class="avatar-ring">
                             <div class="avatar-inner">
-                                👩‍💼
+                                <div class="dh-face" id="dhFace">
+                                    <div class="dh-hair"></div>
+                                    <div class="dh-head">
+                                        <div class="dh-brow left"></div>
+                                        <div class="dh-brow right"></div>
+                                        <div class="dh-eye left"></div>
+                                        <div class="dh-eye right"></div>
+                                        <div class="dh-mouth"></div>
+                                    </div>
+                                    <div class="dh-body"></div>
+                                    <div class="dh-tie"></div>
+                                </div>
                                 <div class="avatar-speaking" id="avatarSpeaking">
                                     <div class="speaking-bar"></div>
                                     <div class="speaking-bar"></div>
@@ -1688,6 +1738,7 @@
                         <div class="avatar-label">
                             <div class="avatar-name">AI 客服 · 小智</div>
                             <div class="avatar-role">Lemonslice Digital Human</div>
+                            <div class="avatar-status" id="avatarStatus">聆听中…</div>
                         </div>
                     </div>
                 </div>
@@ -2098,6 +2149,33 @@
             document.getElementById('latency').textContent = `${lat}ms`;
         }, 3000);
 
+        function setSpeaking(on) {
+            document.getElementById('avatarSpeaking').classList.toggle('active', on);
+            document.getElementById('dhFace').classList.toggle('talking', on);
+            document.getElementById('avatarStatus').textContent = on ? '说话中…' : '聆听中…';
+        }
+
+        let typingToken = 0;
+        function typeReply(bubble, text, done) {
+            const token = ++typingToken;
+            setSpeaking(true);
+            let i = 0;
+            const step = Math.max(1, Math.ceil(text.length / 90));
+            const speed = Math.max(16, Math.min(50, 2200 / text.length));
+            (function tick() {
+                if (token !== typingToken) return;
+                if (i < text.length) {
+                    bubble.innerHTML = text.slice(0, i += step).replace(/\n/g, '<br>');
+                    document.getElementById('chatMessages').scrollTop = 9999999;
+                    setTimeout(tick, speed);
+                } else {
+                    bubble.innerHTML = text.replace(/\n/g, '<br>');
+                    setSpeaking(false);
+                    if (done) done();
+                }
+            })();
+        }
+
         function addMessage(role, text, tool = null) {
             const messagesDiv = document.getElementById('chatMessages');
             const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
@@ -2124,10 +2202,11 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
             // Show speaking animation for AI messages
-            if (role === 'ai') {
-                const speaking = document.getElementById('avatarSpeaking');
-                speaking.classList.add('active');
-                setTimeout(() => speaking.classList.remove('active'), 1200);
+            if (role === 'ai' && text) {
+                const token = typingToken;
+                setSpeaking(true);
+                setTimeout(() => { if (token === typingToken) setSpeaking(false); },
+                           Math.min(2600, 600 + text.length * 45));
             }
 
             return messageDiv;
@@ -2635,11 +2714,14 @@
                     });
                 }
 
-                // Display AI response
-                const aiMsg = addMessage('ai', data.response, data.tools_used?.[0] || null);
-                if (data.products && data.products.length > 0) {
-                    renderProductCards(data.products, aiMsg);
-                }
+                // Display AI response: 数字人口播出回复，说完再出商品卡
+                const aiMsg = addMessage('ai', '', data.tools_used?.[0] || null);
+                const bubble = aiMsg.querySelector('.message-bubble');
+                typeReply(bubble, data.response, () => {
+                    if (data.products && data.products.length > 0) {
+                        renderProductCards(data.products, aiMsg);
+                    }
+                });
                 saveToHistory({
                     role: 'ai', text: data.response,
                     tool: data.tools_used?.[0] || null,
