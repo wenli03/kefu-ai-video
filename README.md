@@ -2,7 +2,9 @@
 
 基于 **LiveKit Agents** + **LangChain** 的电商AI视频客服系统。
 
-> **v3.0 · 全栈 AI Agent** — 通过 117 项测试，覆盖 LangGraph / Multi-Agent / LangSmith / FastAPI / React
+> **v4.0 · 真实推理链路** — 本地 Ollama LLM + ChromaDB 混合语义检索 + 电商比价联动，全链路零硬编码回复
+>
+> v3.0 · 全栈 AI Agent — 通过 117 项测试，覆盖 LangGraph / Multi-Agent / LangSmith / FastAPI / React
 
 ## 项目概述
 
@@ -23,8 +25,18 @@
 - **LangSmith 集成**：全链路 Tracing、Evaluation Harness（8条 Golden Dataset）、Cost Tracking
 - **FastAPI REST API**：/api/chat、/api/session、/api/metrics、/api/health、/api/eval、/api/cost、/api/traces
 - **LiteLLM 模型路由**：按复杂度自动选模型（SIMPLE→gpt-4o-mini, STANDARD→gpt-4o, ADVANCED→gpt-4o）
-- **本地模型部署**：Ollama (qwen2:7b) 作为最终降级兜底，零成本运行
+- **本地模型部署**：Ollama (qwen2.5:3b) 已接入真实推理链路（见 v4.0），同时作为降级兜底，零成本运行
 - **React/Next.js 前端**：Next.js 14 + TypeScript 聊天界面，实时指标面板
+
+### v4.0 真实推理链路（零硬编码回复）
+
+- **本地 LLM 真实推理**：Ollama `qwen2.5:3b`，检索结果注入上下文后由模型基于真实商品数据作答
+- **混合语义检索**：ChromaDB + `nomic-embed-text`（768 维真实向量，68 个采集商品）；关键词优先 + RRF 融合，改述句（不含商品字样的提问）也能纯语义命中
+- **电商比价联动**：京东/拼多多搜索直达卡片，按价格升序 + 「最低」角标；LLM 上下文编号与卡片顺序严格对齐，「第一款」指代不串号
+- **追问上下文续用**：代词追问直接复用上轮推荐卡片，不重新检索，避免噪声召回
+- **会话持久化**：跳转电商平台购买后返回，对话与商品卡从 localStorage 完整还原
+- **数字人口播**：纯 CSS 数字人形象，回复逐字口播（嘴部张合 + 声波条 + 说话状态），说完才出卡片
+- **如实上报**：`tools_used` 仅在实际调用时标记 `rag_search` / `ollama_chat`，Ollama 不可用自动降级为关键词检索 + 兜底话术
 
 ### 生产保障 (P0)
 
@@ -61,7 +73,7 @@
 │  ┌──────────────────────────▼─────────────────────────────┐  │
 │  │         LiteLLM Router (模型路由 + 成本优化)              │  │
 │  │   SIMPLE → gpt-4o-mini  |  STANDARD → gpt-4o           │  │
-│  │   ADVANCED → gpt-4o     |  FALLBACK → ollama/qwen2:7b  │  │
+│  │   ADVANCED → gpt-4o     |  FALLBACK → ollama/qwen2.5:3b  │  │
 │  └────────────────────────────────────────────────────────┘  │
 │                             │                                 │
 │  ┌──────────────────────────▼─────────────────────────────┐  │
@@ -91,11 +103,11 @@
 | Agent框架 | Multi-Agent Supervisor | 意图路由 + 专家分工 |
 | 可观测性 | LangSmith | Tracing / Eval / Cost Tracking |
 | 模型路由 | LiteLLM | 复杂度分级 + 自动选模型 |
-| 本地模型 | Ollama (qwen2:7b) | 零成本降级兜底 |
+| 本地模型 | Ollama (qwen2.5:3b) | 真实推理主力 + 零成本降级兜底 |
 | 后端API | FastAPI | REST API + CORS + Pydantic |
 | 前端 | Next.js 14 + React 18 | TypeScript 聊天UI |
-| 向量数据库 | ChromaDB | 商品知识存储 |
-| 嵌入模型 | OpenAI Embeddings | 文本向量化 |
+| 向量数据库 | ChromaDB | 商品知识存储（68 商品 / 768 维持久化） |
+| 嵌入模型 | nomic-embed-text（本地） | search_document/search_query 前缀 + 关键词优先混合检索 |
 
 ## 快速开始
 
@@ -214,7 +226,7 @@ ecommerce-video-cs/
 │   └── knowledge_base/         # 知识库
 ├── tests/                      # 测试（117项）
 ├── docs/                       # 文档
-│   ├── demo.html               # 交互式演示 (v3.0)
+│   ├── demo.html               # 交互式演示 (v4.0)
 │   ├── screenshots/            # 操作截图
 │   ├── 操作指南.md             # 操作指南
 │   └── 生产就绪测试报告.md     # 生产就绪报告
