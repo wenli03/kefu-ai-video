@@ -1,0 +1,49 @@
+[project]
+name = "ecommerce-video-cs"
+version = "0.1.0"
+description = "AI Video Customer Service for E-commerce using LiveKit + LangChain"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "livekit-agents>=1.0.0",
+    "livekit-plugins-openai>=1.0.0",
+    "livekit-plugins-deepgram>=1.0.0",
+    "livekit-plugins-cartesia>=1.0.0",
+    "livekit-plugins-lemonslice>=1.0.0",
+    "langchain-core>=0.3.0",
+    "langchain-openai>=0.3.0",
+    "langchain-community>=0.3.0",
+    "langgraph>=0.2.0",
+    "chromadb>=0.5.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+    "httpx>=0.27.0",
+    "cryptography>=41.0.0",
+    "fastapi>=0.111.0",
+    "uvicorn>=0.30.0",
+    "litellm>=1.40.0",
+    "langsmith>=0.1.80",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.4.0",
+]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src"]

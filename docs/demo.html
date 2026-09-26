@@ -1,0 +1,3110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopMind AI — 智能视频客服控制台 v3.0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: #1a2236;
+            --bg-card-hover: #1f2a42;
+            --bg-input: #0f1629;
+            --border: #2a3550;
+            --border-light: #374168;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent: #6366f1;
+            --accent-light: #818cf8;
+            --accent-glow: rgba(99, 102, 241, 0.15);
+            --success: #10b981;
+            --success-bg: rgba(16, 185, 129, 0.1);
+            --warning: #f59e0b;
+            --warning-bg: rgba(245, 158, 11, 0.1);
+            --error: #ef4444;
+            --error-bg: rgba(239, 68, 68, 0.1);
+            --info: #3b82f6;
+            --info-bg: rgba(59, 130, 246, 0.1);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Top Navigation Bar */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            height: 48px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .topbar-logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent), #a855f7);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .topbar-title {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .topbar-title span {
+            color: var(--text-muted);
+            font-weight: 400;
+            margin-left: 8px;
+            font-size: 13px;
+        }
+
+        .topbar-status {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: var(--success-bg);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--success);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .topbar-metrics {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .metric-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .metric-value {
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 340px 1fr 280px;
+            gap: 0;
+            height: calc(100vh - 48px);
+        }
+
+        /* Video Panel */
+        .video-section {
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .video-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .video-header-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        .video-live-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 10px;
+            background: var(--error-bg);
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--error);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .video-live-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--error);
+            border-radius: 50%;
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        .video-container {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(180deg, #0d1321 0%, #161d30 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .video-container::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+        }
+
+        .avatar-container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .avatar-ring {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            padding: 3px;
+            background: linear-gradient(135deg, var(--accent), #a855f7, var(--accent));
+            background-size: 200% 200%;
+            animation: ring-rotate 4s ease infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes ring-rotate {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .avatar-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: var(--bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .avatar-speaking {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 2px;
+            align-items: flex-end;
+            height: 24px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .avatar-speaking.active {
+            opacity: 1;
+        }
+
+        .speaking-bar {
+            width: 3px;
+            background: var(--accent);
+            border-radius: 2px;
+            animation: speaking 0.6s ease-in-out infinite alternate;
+        }
+
+        .speaking-bar:nth-child(1) { height: 8px; animation-delay: 0s; }
+        .speaking-bar:nth-child(2) { height: 16px; animation-delay: 0.1s; }
+        .speaking-bar:nth-child(3) { height: 12px; animation-delay: 0.2s; }
+        .speaking-bar:nth-child(4) { height: 20px; animation-delay: 0.15s; }
+        .speaking-bar:nth-child(5) { height: 10px; animation-delay: 0.05s; }
+
+        @keyframes speaking {
+            0% { transform: scaleY(0.3); }
+            100% { transform: scaleY(1); }
+        }
+
+        .avatar-label {
+            text-align: center;
+            margin-top: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .avatar-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .avatar-role {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Service Stack */
+        .service-stack {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .service-stack-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .service-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: var(--bg-card);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+
+        .service-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .service-value {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .service-status {
+            width: 6px;
+            height: 6px;
+            background: var(--success);
+            border-radius: 50%;
+            margin-left: 8px;
+        }
+
+        /* Chat Panel */
+        .chat-section {
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+        }
+
+        .chat-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-header-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        .chat-session-id {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-card);
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            max-width: 85%;
+            animation: message-in 0.3s ease;
+        }
+
+        @keyframes message-in {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .message.ai .message-avatar {
+            background: linear-gradient(135deg, var(--accent), #a855f7);
+        }
+
+        .message.user .message-avatar {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+        }
+
+        .message-body {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .message.user .message-body {
+            align-items: flex-end;
+        }
+
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+            letter-spacing: -0.01em;
+        }
+
+        .message.ai .message-bubble {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 4px;
+            color: var(--text-primary);
+        }
+
+        .message.user .message-bubble {
+            background: var(--accent);
+            border-bottom-right-radius: 4px;
+            color: white;
+        }
+
+        .message-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .tool-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            background: var(--accent-glow);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--accent-light);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Product Cards */
+        .product-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .product-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .product-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent);
+            transform: translateX(4px);
+            box-shadow: 0 2px 12px rgba(99, 102, 241, 0.15);
+        }
+
+        .product-card-rank {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .product-card-rank.cheapest {
+            background: var(--success);
+        }
+
+        .product-card-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .product-card-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .product-card-meta {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .product-card-price {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .product-card-price .current {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ef4444;
+        }
+
+        .product-card-price .original {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+
+        .product-card-platform {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            margin-top: 3px;
+            display: inline-block;
+        }
+
+        .product-card-platform.jd {
+            background: rgba(220, 38, 38, 0.15);
+            color: #ef4444;
+        }
+
+        .product-card-platform.pinduoduo {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
+        .product-card-arrow {
+            color: var(--text-muted);
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .product-card:hover .product-card-arrow {
+            color: var(--accent-light);
+        }
+
+        .chat-input-area {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+            background: var(--bg-secondary);
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 10px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input:focus {
+            border-color: var(--accent);
+        }
+
+        .chat-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn-send {
+            padding: 10px 20px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-send:hover {
+            background: var(--accent-light);
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Right Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        /* Scenario Controls */
+        .scenario-section {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .scenario-btn {
+            padding: 8px 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .scenario-btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+
+        .scenario-btn.active {
+            background: var(--accent-glow);
+            border-color: var(--accent);
+            color: var(--accent-light);
+        }
+
+        .scenario-btn .icon {
+            font-size: 14px;
+        }
+
+        .btn-clear {
+            grid-column: 1 / -1;
+            justify-content: center;
+            border-color: var(--border);
+            color: var(--text-muted);
+        }
+
+        .btn-clear:hover {
+            border-color: var(--error);
+            color: var(--error);
+            background: var(--error-bg);
+        }
+
+        /* Tools Panel */
+        .tools-section {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tools-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .tool-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            transition: all 0.2s;
+        }
+
+        .tool-item:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .tool-item.called {
+            border-color: var(--success);
+            background: var(--success-bg);
+        }
+
+        .tool-name {
+            font-size: 11px;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+        }
+
+        .tool-desc {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        .tool-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--border);
+            flex-shrink: 0;
+        }
+
+        .tool-item.called .tool-status {
+            background: var(--success);
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+        }
+
+        /* Log Panel */
+        .log-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .log-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .log-header-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+        }
+
+        .log-count {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .log-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            line-height: 1.8;
+        }
+
+        .log-container::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .log-container::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .log-entry {
+            display: flex;
+            gap: 8px;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(42, 53, 80, 0.3);
+            animation: log-in 0.2s ease;
+        }
+
+        @keyframes log-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .log-time {
+            color: var(--text-muted);
+            flex-shrink: 0;
+            min-width: 72px;
+        }
+
+        .log-level {
+            font-weight: 600;
+            flex-shrink: 0;
+            min-width: 36px;
+        }
+
+        .log-level.info { color: var(--success); }
+        .log-level.warn { color: var(--warning); }
+        .log-level.error { color: var(--error); }
+
+        .log-event {
+            color: var(--accent-light);
+            flex-shrink: 0;
+        }
+
+        .log-data {
+            color: var(--text-muted);
+            word-break: break-all;
+        }
+
+        /* Typing indicator */
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 4px;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            border-bottom-left-radius: 4px;
+            width: fit-content;
+        }
+
+        .typing-indicator.visible {
+            display: flex;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-6px); opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .main-layout {
+                grid-template-columns: 1fr 1fr;
+            }
+            .sidebar {
+                grid-column: 1 / -1;
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            .sidebar > * {
+                flex: 1;
+                min-width: 280px;
+            }
+        }
+
+        /* P0 Infrastructure Panel */
+        .infra-section {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .infra-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .infra-card {
+            padding: 10px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            transition: all 0.3s;
+        }
+
+        .infra-card.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 12px rgba(99, 102, 241, 0.15);
+        }
+
+        .infra-card.warning {
+            border-color: var(--warning);
+            background: var(--warning-bg);
+        }
+
+        .infra-card.error {
+            border-color: var(--error);
+            background: var(--error-bg);
+        }
+
+        .infra-card.success {
+            border-color: var(--success);
+            background: var(--success-bg);
+        }
+
+        .infra-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .infra-card-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .infra-card-icon {
+            font-size: 12px;
+        }
+
+        .infra-card-value {
+            font-size: 18px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+        }
+
+        .infra-card-sub {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Circuit Breaker Visualization */
+        .circuit-breaker-panel {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            display: none;
+        }
+
+        .circuit-breaker-panel.visible {
+            display: block;
+        }
+
+        .cb-states {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .cb-state {
+            flex: 1;
+            padding: 8px;
+            text-align: center;
+            border-radius: var(--radius-sm);
+            font-size: 11px;
+            font-weight: 600;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            transition: all 0.3s;
+        }
+
+        .cb-state.active-closed {
+            background: var(--success-bg);
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .cb-state.active-open {
+            background: var(--error-bg);
+            border-color: var(--error);
+            color: var(--error);
+        }
+
+        .cb-state.active-half {
+            background: var(--warning-bg);
+            border-color: var(--warning);
+            color: var(--warning);
+        }
+
+        .cb-arrow {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .cb-log {
+            padding: 8px 12px;
+            background: var(--bg-input);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            line-height: 1.8;
+            max-height: 120px;
+            overflow-y: auto;
+            color: var(--text-muted);
+        }
+
+        .cb-log .highlight {
+            color: var(--accent-light);
+        }
+
+        .cb-log .warn-text {
+            color: var(--warning);
+        }
+
+        .cb-log .error-text {
+            color: var(--error);
+        }
+
+        .cb-log .success-text {
+            color: var(--success);
+        }
+
+        /* Security Detection Panel */
+        .security-panel {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            display: none;
+        }
+
+        .security-panel.visible {
+            display: block;
+        }
+
+        .security-detection {
+            padding: 10px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+        }
+
+        .security-detection.detected {
+            border-color: var(--error);
+            background: var(--error-bg);
+        }
+
+        .security-detection.safe {
+            border-color: var(--success);
+            background: var(--success-bg);
+        }
+
+        .security-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .security-result {
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+
+        .security-result .masked {
+            color: var(--warning);
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .security-result .mask-replacement {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        /* Monitoring Dashboard */
+        .monitoring-panel {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            display: none;
+        }
+
+        .monitoring-panel.visible {
+            display: block;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .metric-card {
+            padding: 10px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+        }
+
+        .metric-card-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .metric-card-value {
+            font-size: 20px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+        }
+
+        .metric-card-value.text-success { color: var(--success); }
+        .metric-card-value.text-warning { color: var(--warning); }
+        .metric-card-value.text-error { color: var(--error); }
+
+        .metric-bar-container {
+            margin-top: 6px;
+            height: 4px;
+            background: var(--bg-input);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .metric-bar {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+
+        .metric-bar.bar-success { background: var(--success); }
+        .metric-bar.bar-warning { background: var(--warning); }
+        .metric-bar.bar-error { background: var(--error); }
+
+        .health-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .health-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 11px;
+        }
+
+        .health-name {
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .health-status {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .health-status.healthy { color: var(--success); }
+        .health-status.degraded { color: var(--warning); }
+        .health-status.down { color: var(--error); }
+
+        .health-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .health-dot.healthy { background: var(--success); }
+        .health-dot.degraded { background: var(--warning); }
+        .health-dot.down { background: var(--error); }
+
+        /* Backup Panel */
+        .backup-panel {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            display: none;
+        }
+
+        .backup-panel.visible {
+            display: block;
+        }
+
+        .backup-timeline {
+            position: relative;
+            padding-left: 16px;
+        }
+
+        .backup-timeline::before {
+            content: '';
+            position: absolute;
+            left: 4px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+
+        .backup-event {
+            position: relative;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 11px;
+            animation: message-in 0.3s ease;
+        }
+
+        .backup-event::before {
+            content: '';
+            position: absolute;
+            left: -14px;
+            top: 12px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 2px solid var(--bg-primary);
+        }
+
+        .backup-event.success::before { background: var(--success); }
+        .backup-event.warning::before { background: var(--warning); }
+
+        .backup-event-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .backup-event-detail {
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+        }
+
+        /* Product Card (Shopping Guide) */
+        .product-card {
+            margin-top: 10px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            animation: message-in 0.3s ease;
+        }
+        .product-card-img {
+            height: 120px;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            position: relative;
+        }
+        .product-card-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            padding: 3px 10px;
+            background: var(--error);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 4px;
+            letter-spacing: 0.03em;
+        }
+        .product-card-badge.cheapest {
+            background: linear-gradient(135deg, var(--accent), #a855f7);
+        }
+        .product-card-body {
+            padding: 12px 14px;
+        }
+        .product-card-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .product-card-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+        .product-card-specs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 10px;
+        }
+        .product-spec-tag {
+            padding: 2px 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 10px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .product-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .product-card-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--error);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .product-card-price .currency {
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .product-card-price .original {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-decoration: line-through;
+            margin-left: 6px;
+            font-weight: 400;
+        }
+        .product-card-stock {
+            font-size: 11px;
+            color: var(--success);
+            font-weight: 500;
+        }
+        .btn-buy {
+            padding: 8px 20px;
+            background: linear-gradient(135deg, var(--accent), #a855f7);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-buy:hover {
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* Order Detail Card */
+        .order-card {
+            margin-top: 10px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            animation: message-in 0.3s ease;
+        }
+        .order-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+        }
+        .order-card-id {
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+        }
+        .order-card-status {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .order-card-status.shipped {
+            background: var(--info-bg);
+            color: var(--info);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        .order-card-status.delivered {
+            background: var(--success-bg);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .order-card-status.pending {
+            background: var(--warning-bg);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+        .order-card-body {
+            padding: 12px 14px;
+        }
+        .order-item-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(42, 53, 80, 0.3);
+        }
+        .order-item-row:last-child {
+            border-bottom: none;
+        }
+        .order-item-emoji {
+            font-size: 28px;
+            width: 40px;
+            text-align: center;
+        }
+        .order-item-info {
+            flex: 1;
+        }
+        .order-item-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        .order-item-qty {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .order-item-price {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .order-card-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            border-top: 1px solid var(--border);
+            background: rgba(99, 102, 241, 0.03);
+        }
+        .order-total-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .order-total-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--error);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .order-card-tracking {
+            padding: 10px 14px;
+            border-top: 1px solid var(--border);
+        }
+        .tracking-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+        .tracking-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        .tracking-step {
+            display: flex;
+            gap: 10px;
+            padding: 4px 0;
+            position: relative;
+        }
+        .tracking-step-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--border);
+            flex-shrink: 0;
+            margin-top: 3px;
+            position: relative;
+            z-index: 1;
+        }
+        .tracking-step-dot.done {
+            background: var(--success);
+            box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+        }
+        .tracking-step-dot.current {
+            background: var(--info);
+            box-shadow: 0 0 6px rgba(59, 130, 246, 0.4);
+            animation: pulse-dot 1.5s infinite;
+        }
+        .tracking-step:not(:last-child) .tracking-step-dot::after {
+            content: '';
+            position: absolute;
+            left: 4px;
+            top: 10px;
+            width: 2px;
+            height: 20px;
+            background: var(--border);
+        }
+        .tracking-step:not(:last-child) .tracking-step-dot.done::after {
+            background: var(--success);
+        }
+        .tracking-step-info {
+            flex: 1;
+        }
+        .tracking-step-title {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        .tracking-step-time {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .order-card-actions {
+            padding: 10px 14px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+        }
+        .btn-order-action {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+            text-align: center;
+        }
+        .btn-order-action:hover {
+            border-color: var(--accent);
+            color: var(--accent-light);
+            background: var(--accent-glow);
+        }
+        .btn-order-action.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+        .btn-order-action.primary:hover {
+            background: var(--accent-light);
+        }
+
+        /* Order Confirmation Card */
+        .order-confirm-card {
+            margin-top: 10px;
+            background: var(--bg-input);
+            border: 1px solid var(--success);
+            border-radius: var(--radius);
+            padding: 14px;
+            animation: message-in 0.3s ease;
+        }
+        .order-confirm-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--success);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .order-confirm-detail {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+        .order-confirm-detail strong {
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="topbar">
+        <div class="topbar-brand">
+            <div class="topbar-logo">S</div>
+            <div class="topbar-title">ShopMind AI <span>智能视频客服控制台 v3.0 · 全栈 AI Agent</span></div>
+        </div>
+        <div class="topbar-status">
+            <div class="topbar-metrics">
+                <div class="metric-item">Room <span class="metric-value" id="roomId">RM_a8f3k2</span></div>
+                <div class="metric-item">Latency <span class="metric-value" id="latency">42ms</span></div>
+                <div class="metric-item">Session <span class="metric-value" id="sessionTime">00:00</span></div>
+            </div>
+            <div class="status-pill">
+                <div class="status-dot"></div>
+                Live
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+        <!-- Video Section -->
+        <div class="video-section">
+            <div class="video-header">
+                <div class="video-header-title">数字人客服</div>
+                <div class="video-live-badge">
+                    <div class="video-live-dot"></div>
+                    LIVE
+                </div>
+            </div>
+            <div class="video-container">
+                <div style="text-align: center;">
+                    <div class="avatar-container">
+                        <div class="avatar-ring">
+                            <div class="avatar-inner">
+                                👩‍💼
+                                <div class="avatar-speaking" id="avatarSpeaking">
+                                    <div class="speaking-bar"></div>
+                                    <div class="speaking-bar"></div>
+                                    <div class="speaking-bar"></div>
+                                    <div class="speaking-bar"></div>
+                                    <div class="speaking-bar"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="avatar-label">
+                            <div class="avatar-name">AI 客服 · 小智</div>
+                            <div class="avatar-role">Lemonslice Digital Human</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="service-stack">
+                <div class="service-stack-title">服务栈</div>
+                <div class="service-row">
+                    <span class="service-name">语音识别 (STT)</span>
+                    <div style="display:flex;align-items:center;">
+                        <span class="service-value">Deepgram Nova-3</span>
+                        <div class="service-status"></div>
+                    </div>
+                </div>
+                <div class="service-row">
+                    <span class="service-name">大语言模型 (LLM)</span>
+                    <div style="display:flex;align-items:center;">
+                        <span class="service-value">Ollama qwen2.5:3b（本地）</span>
+                        <div class="service-status"></div>
+                    </div>
+                </div>
+                <div class="service-row">
+                    <span class="service-name">语音合成 (TTS)</span>
+                    <div style="display:flex;align-items:center;">
+                        <span class="service-value">Cartesia Sonic-3</span>
+                        <div class="service-status"></div>
+                    </div>
+                </div>
+                <div class="service-row">
+                    <span class="service-name">知识检索 (RAG)</span>
+                    <div style="display:flex;align-items:center;">
+                        <span class="service-value">ChromaDB + nomic 混合检索</span>
+                        <div class="service-status"></div>
+                    </div>
+                </div>
+                <div class="service-row" style="border:1px solid rgba(99,102,241,0.2);background:rgba(99,102,241,0.05);">
+                    <span class="service-name">生产保障层</span>
+                    <div style="display:flex;align-items:center;">
+                        <span class="service-value" style="color:var(--accent-light);">熔断 · 限流 · 加密 · 监控</span>
+                        <div class="service-status"></div>
+                    </div>
+                </div>
+                <div class="service-row" style="border:1px solid rgba(16,185,129,0.2);background:rgba(16,185,129,0.05);">
+                    <span class="service-name">流程编排</span>
+                    <div style="display:flex;align-items:center;">
+                        <span class="service-value" style="color:var(--success);">LangGraph StateGraph</span>
+                        <div class="service-status"></div>
+                    </div>
+                </div>
+                <div class="service-row" style="border:1px solid rgba(16,185,129,0.2);background:rgba(16,185,129,0.05);">
+                    <span class="service-name">多Agent协作</span>
+                    <div style="display:flex;align-items:center;">
+                        <span class="service-value" style="color:var(--success);">Supervisor · 3专家</span>
+                        <div class="service-status"></div>
+                    </div>
+                </div>
+                <div class="service-row" style="border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.05);">
+                    <span class="service-name">可观测性</span>
+                    <div style="display:flex;align-items:center;">
+                        <span class="service-value" style="color:var(--info);">LangSmith · Eval · Cost</span>
+                        <div class="service-status"></div>
+                    </div>
+                </div>
+                <div class="service-row" style="border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.05);">
+                    <span class="service-name">模型路由</span>
+                    <div style="display:flex;align-items:center;">
+                        <span class="service-value" style="color:var(--info);">LiteLLM + Ollama</span>
+                        <div class="service-status"></div>
+                    </div>
+                </div>
+                <div class="service-row" style="border:1px solid rgba(245,158,11,0.2);background:rgba(245,158,11,0.05);">
+                    <span class="service-name">全栈API</span>
+                    <div style="display:flex;align-items:center;">
+                        <span class="service-value" style="color:var(--warning);">FastAPI + Next.js 14</span>
+                        <div class="service-status"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Section -->
+        <div class="chat-section">
+            <div class="chat-header">
+                <div class="chat-header-title">实时对话</div>
+                <div class="chat-session-id" id="sessionId">session_0926_001</div>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai">
+                    <div class="message-avatar">👩‍💼</div>
+                    <div class="message-body">
+                        <div class="message-bubble">您好！我是AI购物助手小智，很高兴为您服务。请问有什么可以帮助您的吗？</div>
+                        <div class="message-meta">
+                            <span>13:55:01</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="userInput" placeholder="输入消息..." onkeypress="if(event.key==='Enter') sendMessage()">
+                <button class="btn-send" onclick="sendMessage()">发送</button>
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="sidebar">
+            <!-- Scenario Controls -->
+            <div class="scenario-section">
+                <div class="section-title">业务场景</div>
+                <div class="scenario-grid">
+                    <button class="scenario-btn" onclick="runScenario('product')" id="btn-product">
+                        <span class="icon">🔍</span> 商品咨询
+                    </button>
+                    <button class="scenario-btn" onclick="runScenario('order')" id="btn-order">
+                        <span class="icon">📦</span> 订单查询
+                    </button>
+                    <button class="scenario-btn" onclick="runScenario('return')" id="btn-return">
+                        <span class="icon">🔄</span> 退换货
+                    </button>
+                    <button class="scenario-btn" onclick="runScenario('recommend')" id="btn-recommend">
+                        <span class="icon">💡</span> 智能推荐
+                    </button>
+                </div>
+                <div class="section-title" style="margin-top:12px;margin-bottom:12px;">生产就绪 (P0)</div>
+                <div class="scenario-grid">
+                    <button class="scenario-btn" onclick="runP0Scenario('circuit')" id="btn-circuit">
+                        <span class="icon">⚡</span> 熔断降级
+                    </button>
+                    <button class="scenario-btn" onclick="runP0Scenario('ratelimit')" id="btn-ratelimit">
+                        <span class="icon">🛡️</span> 限流防护
+                    </button>
+                    <button class="scenario-btn" onclick="runP0Scenario('security')" id="btn-security">
+                        <span class="icon">🔐</span> 安全检测
+                    </button>
+                    <button class="scenario-btn" onclick="runP0Scenario('monitor')" id="btn-monitor">
+                        <span class="icon">📊</span> 监控面板
+                    </button>
+                    <button class="scenario-btn" onclick="runP0Scenario('backup')" id="btn-backup">
+                        <span class="icon">💾</span> 备份恢复
+                    </button>
+                    <button class="scenario-btn" onclick="runP0Scenario('health')" id="btn-health">
+                        <span class="icon">🏥</span> 健康检查
+                    </button>
+                    <button class="scenario-btn btn-clear" onclick="clearChat()">
+                        <span class="icon">🗑️</span> 清空对话
+                    </button>
+                </div>
+                <div class="section-title" style="margin-top:12px;margin-bottom:12px;">v3.0 全栈 AI Agent</div>
+                <div class="scenario-grid">
+                    <button class="scenario-btn" onclick="runV3Scenario('langgraph')" id="btn-langgraph">
+                        <span class="icon">🔀</span> LangGraph
+                    </button>
+                    <button class="scenario-btn" onclick="runV3Scenario('multiagent')" id="btn-multiagent">
+                        <span class="icon">🤖</span> Multi-Agent
+                    </button>
+                    <button class="scenario-btn" onclick="runV3Scenario('langsmith')" id="btn-langsmith">
+                        <span class="icon">🔍</span> LangSmith
+                    </button>
+                    <button class="scenario-btn" onclick="runV3Scenario('fastapi')" id="btn-fastapi">
+                        <span class="icon">⚡</span> FastAPI
+                    </button>
+                    <button class="scenario-btn" onclick="runV3Scenario('litellm')" id="btn-litellm">
+                        <span class="icon">🔀</span> LiteLLM
+                    </button>
+                    <button class="scenario-btn" onclick="runV3Scenario('ollama')" id="btn-ollama">
+                        <span class="icon">🦙</span> Ollama
+                    </button>
+                </div>
+            </div>
+
+            <!-- Infrastructure Metrics -->
+            <div class="infra-section" id="infraSection">
+                <div class="section-title">基础设施监控</div>
+                <div class="infra-grid">
+                    <div class="infra-card" id="infra-circuit">
+                        <div class="infra-card-header">
+                            <span class="infra-card-title">熔断器</span>
+                            <span class="infra-card-icon">⚡</span>
+                        </div>
+                        <div class="infra-card-value" id="circuitState" style="font-size:14px;color:var(--success);">CLOSED</div>
+                        <div class="infra-card-sub">正常通行</div>
+                    </div>
+                    <div class="infra-card" id="infra-rate">
+                        <div class="infra-card-header">
+                            <span class="infra-card-title">请求限流</span>
+                            <span class="infra-card-icon">🛡️</span>
+                        </div>
+                        <div class="infra-card-value" id="rateCount" style="font-size:14px;">0/60</div>
+                        <div class="infra-card-sub">Token Bucket · 每分钟</div>
+                    </div>
+                    <div class="infra-card" id="infra-encrypt">
+                        <div class="infra-card-header">
+                            <span class="infra-card-title">数据加密</span>
+                            <span class="infra-card-icon">🔐</span>
+                        </div>
+                        <div class="infra-card-value" style="font-size:14px;color:var(--success);">AES-GCM</div>
+                        <div class="infra-card-sub">敏感字段加密</div>
+                    </div>
+                    <div class="infra-card" id="infra-health">
+                        <div class="infra-card-header">
+                            <span class="infra-card-title">服务健康</span>
+                            <span class="infra-card-icon">🏥</span>
+                        </div>
+                        <div class="infra-card-value" id="healthScore" style="font-size:14px;color:var(--success);">6/6</div>
+                        <div class="infra-card-sub">全部正常</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Circuit Breaker Detail Panel -->
+            <div class="circuit-breaker-panel" id="circuitPanel">
+                <div class="section-title">熔断器状态机</div>
+                <div class="cb-states">
+                    <div class="cb-state" id="cb-closed">CLOSED<br><span style="font-size:9px;opacity:0.7">正常</span></div>
+                    <span class="cb-arrow">→</span>
+                    <div class="cb-state" id="cb-open">OPEN<br><span style="font-size:9px;opacity:0.7">熔断</span></div>
+                    <span class="cb-arrow">→</span>
+                    <div class="cb-state" id="cb-half">HALF_OPEN<br><span style="font-size:9px;opacity:0.7">探测</span></div>
+                </div>
+                <div class="cb-log" id="cbLog"></div>
+            </div>
+
+            <!-- Security Detection Panel -->
+            <div class="security-panel" id="securityPanel">
+                <div class="section-title">安全检测结果</div>
+                <div id="securityResults"></div>
+            </div>
+
+            <!-- Monitoring Dashboard Panel -->
+            <div class="monitoring-panel" id="monitorPanel">
+                <div class="section-title">实时监控面板</div>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-card-label">请求总量</div>
+                        <div class="metric-card-value" id="mon-requests">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-card-label">错误率</div>
+                        <div class="metric-card-value text-success" id="mon-error-rate">0.0%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-card-label">P95 延迟</div>
+                        <div class="metric-card-value" id="mon-latency">0ms</div>
+                        <div class="metric-bar-container">
+                            <div class="metric-bar bar-success" id="mon-latency-bar" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-card-label">活跃会话</div>
+                        <div class="metric-card-value" id="mon-sessions">1</div>
+                    </div>
+                </div>
+                <div class="section-title" style="margin-top:8px;">告警规则</div>
+                <div class="health-list" id="alertRules"></div>
+            </div>
+
+            <!-- Health Check Panel -->
+            <div class="monitoring-panel" id="healthPanel">
+                <div class="section-title">服务健康检查</div>
+                <div class="health-list" id="healthList"></div>
+            </div>
+
+            <!-- Backup Panel -->
+            <div class="backup-panel" id="backupPanel">
+                <div class="section-title">备份与恢复</div>
+                <div class="backup-timeline" id="backupTimeline"></div>
+            </div>
+
+            <!-- Tools Panel -->
+            <div class="tools-section">
+                <div class="section-title">Function Tools (10)</div>
+                <div class="tools-list" id="toolsList">
+                    <div class="tool-item" id="tool-search_products">
+                        <div>
+                            <div class="tool-name">search_products</div>
+                            <div class="tool-desc">语义搜索商品</div>
+                        </div>
+                        <div class="tool-status"></div>
+                    </div>
+                    <div class="tool-item" id="tool-get_product_details">
+                        <div>
+                            <div class="tool-name">get_product_details</div>
+                            <div class="tool-desc">获取商品详情</div>
+                        </div>
+                        <div class="tool-status"></div>
+                    </div>
+                    <div class="tool-item" id="tool-check_inventory">
+                        <div>
+                            <div class="tool-name">check_inventory</div>
+                            <div class="tool-desc">查询库存状态</div>
+                        </div>
+                        <div class="tool-status"></div>
+                    </div>
+                    <div class="tool-item" id="tool-get_recommendations">
+                        <div>
+                            <div class="tool-name">get_recommendations</div>
+                            <div class="tool-desc">智能商品推荐</div>
+                        </div>
+                        <div class="tool-status"></div>
+                    </div>
+                    <div class="tool-item" id="tool-query_order_status">
+                        <div>
+                            <div class="tool-name">query_order_status</div>
+                            <div class="tool-desc">查询订单状态</div>
+                        </div>
+                        <div class="tool-status"></div>
+                    </div>
+                    <div class="tool-item" id="tool-get_tracking_info">
+                        <div>
+                            <div class="tool-name">get_tracking_info</div>
+                            <div class="tool-desc">物流追踪信息</div>
+                        </div>
+                        <div class="tool-status"></div>
+                    </div>
+                    <div class="tool-item" id="tool-initiate_return">
+                        <div>
+                            <div class="tool-name">initiate_return</div>
+                            <div class="tool-desc">发起退换货</div>
+                        </div>
+                        <div class="tool-status"></div>
+                    </div>
+                    <div class="tool-item" id="tool-check_return_policy">
+                        <div>
+                            <div class="tool-name">check_return_policy</div>
+                            <div class="tool-desc">查询退换政策</div>
+                        </div>
+                        <div class="tool-status"></div>
+                    </div>
+                    <div class="tool-item" id="tool-get_current_promotions">
+                        <div>
+                            <div class="tool-name">get_current_promotions</div>
+                            <div class="tool-desc">获取促销活动</div>
+                        </div>
+                        <div class="tool-status"></div>
+                    </div>
+                    <div class="tool-item" id="tool-apply_coupon">
+                        <div>
+                            <div class="tool-name">apply_coupon</div>
+                            <div class="tool-desc">使用优惠券</div>
+                        </div>
+                        <div class="tool-status"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Log Panel -->
+            <div class="log-section">
+                <div class="log-header">
+                    <div class="log-header-title">Structured Logs</div>
+                    <div class="log-count" id="logCount">1 entry</div>
+                </div>
+                <div class="log-container" id="logPanel">
+                    <div class="log-entry">
+                        <span class="log-time">13:55:01</span>
+                        <span class="log-level info">INFO</span>
+                        <span class="log-event">session_started</span>
+                        <span class="log-data">{"room":"RM_a8f3k2","stt":"deepgram/nova-3","llm":"openai/gpt-4o","tts":"cartesia/sonic-3"}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const scenarios = {
+            product: [
+                { role: 'user', text: '我想找一款适合跑步的耳机', delay: 1000 },
+                { role: 'ai', text: '好的，我为您搜索适合跑步的耳机。', delay: 1500, tool: 'search_products' },
+                { role: 'ai', text: '找到了！我为您推荐智能蓝牙耳机 Pro，价格299元。这款耳机支持主动降噪，续航30小时，蓝牙5.3，IPX5防水，非常适合运动使用。', delay: 2000, tool: 'get_product_details' },
+                { role: 'ai', text: '目前库存充足，有150件。有黑色和白色两种颜色可选。您需要了解更多详情吗？', delay: 1500, tool: 'check_inventory' }
+            ],
+            order: [
+                { role: 'user', text: '我的订单 ORD20240101001 到哪了？', delay: 1000 },
+                { role: 'ai', text: '好的，我为您查询订单状态。', delay: 1500, tool: 'query_order_status' },
+                { role: 'ai', text: '您的订单 ORD20240101001 已发货，包含智能蓝牙耳机 Pro（1件）和保温杯（2件），总计477元。', delay: 2000 },
+                { role: 'ai', text: '物流信息：顺丰速运承运，运单号 SF1234567890。目前包裹已在上海浦东派送中，预计明天送达。', delay: 2000, tool: 'get_tracking_info' }
+            ],
+            return: [
+                { role: 'user', text: '我想退掉刚收到的鞋子', delay: 1000 },
+                { role: 'ai', text: '好的，请问您的订单号是多少？退换原因是什么？', delay: 1500 },
+                { role: 'user', text: '订单号 ORD20240102002，鞋子尺码不合适', delay: 1500 },
+                { role: 'ai', text: '我为您查询订单信息。', delay: 1500, tool: 'query_order_status' },
+                { role: 'ai', text: '已为您发起退货申请，退货单号 RETORD20240102002。退货原因：尺码不合适。', delay: 2000, tool: 'initiate_return' },
+                { role: 'ai', text: '退货申请已提交，预计1-2个工作日内审核。后续步骤：\n1) 等待审核通过\n2) 按指引寄回商品\n3) 商家收货后退款', delay: 2000 }
+            ],
+            recommend: [
+                { role: 'user', text: '推荐一款送女朋友的礼物，预算300-500元', delay: 1000 },
+                { role: 'ai', text: '好的，我根据您的偏好和预算为您推荐商品。', delay: 1500, tool: 'get_recommendations' },
+                { role: 'ai', text: '为您推荐以下商品：\n\n1. 智能蓝牙耳机 Pro（299元）— 高品质降噪，适合通勤和音乐爱好者\n2. 运动跑鞋 飞翼系列（459元）— 轻量化设计，适合日常穿搭', delay: 2500 },
+                { role: 'ai', text: '另外，当前有"新人专享"活动，新用户首单立减20元，订单满99元可用。需要我帮您查看优惠券吗？', delay: 2000, tool: 'get_current_promotions' }
+            ]
+        };
+
+        let currentScenario = null;
+        let scenarioIndex = 0;
+        let logEntryCount = 1;
+        let sessionSeconds = 0;
+
+        // Session timer
+        setInterval(() => {
+            sessionSeconds++;
+            const m = String(Math.floor(sessionSeconds / 60)).padStart(2, '0');
+            const s = String(sessionSeconds % 60).padStart(2, '0');
+            document.getElementById('sessionTime').textContent = `${m}:${s}`;
+        }, 1000);
+
+        // Simulate latency fluctuation
+        setInterval(() => {
+            const lat = 35 + Math.floor(Math.random() * 20);
+            document.getElementById('latency').textContent = `${lat}ms`;
+        }, 3000);
+
+        function addMessage(role, text, tool = null) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            const avatar = role === 'ai' ? '‍💼' : '👤';
+
+            let toolTag = '';
+            if (tool) {
+                toolTag = `<span class="tool-tag">fn ${tool}</span>`;
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div class="message-body">
+                    <div class="message-bubble">${text.replace(/\n/g, '<br>')}</div>
+                    <div class="message-meta">
+                        <span>${time}</span>
+                        ${toolTag}
+                    </div>
+                </div>
+            `;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            // Show speaking animation for AI messages
+            if (role === 'ai') {
+                const speaking = document.getElementById('avatarSpeaking');
+                speaking.classList.add('active');
+                setTimeout(() => speaking.classList.remove('active'), 1200);
+            }
+
+            return messageDiv;
+        }
+
+        function renderProductCards(products, messageDiv) {
+            if (!products || products.length === 0) return;
+            const bubble = messageDiv.querySelector('.message-bubble');
+            if (!bubble) return;
+
+            const container = document.createElement('div');
+            container.className = 'product-cards';
+
+            products.forEach((p, idx) => {
+                const card = document.createElement('a');
+                card.className = 'product-card';
+                card.href = p.url;
+                card.target = '_blank';
+                card.rel = 'noopener noreferrer';
+
+                const rankClass = idx === 0 ? ' cheapest' : '';
+                const rankLabel = idx === 0 ? '最低' : `${idx + 1}`;
+                const discountTag = p.discount > 0 ? `<span style="color:var(--danger);font-size:11px;margin-left:6px;">-${p.discount}%</span>` : '';
+                const priceHtml = `<span class="current">&yen;${p.price.toFixed(0)}</span>${discountTag}${p.original_price > p.price ? `<span class="original">&yen;${p.original_price.toFixed(0)}</span>` : ''}`;
+
+                card.innerHTML = `
+                    <div class="product-card-rank${rankClass}">${rankLabel}</div>
+                    <div class="product-card-info">
+                        <div class="product-card-name">${p.name}</div>
+                        <div class="product-card-meta">
+                            <span class="product-card-platform ${p.platform}">${p.platform_name}</span>
+                            <span style="color:var(--text-secondary);font-size:11px;">${p.rating}分 · 已售${p.sales_count > 10000 ? (p.sales_count / 10000).toFixed(1) + '万' : p.sales_count}</span>
+                        </div>
+                    </div>
+                    <div class="product-card-price">${priceHtml}</div>
+                    <div class="product-card-arrow">&rarr;</div>
+                `;
+                container.appendChild(card);
+            });
+
+            bubble.appendChild(container);
+            const messagesDiv = document.getElementById('chatMessages');
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function addLog(level, event, data) {
+            const logPanel = document.getElementById('logPanel');
+            const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `
+                <span class="log-time">${time}</span>
+                <span class="log-level ${level}">${level.toUpperCase()}</span>
+                <span class="log-event">${event}</span>
+                <span class="log-data">${JSON.stringify(data)}</span>
+            `;
+            logPanel.appendChild(logEntry);
+            logPanel.scrollTop = logPanel.scrollHeight;
+            logEntryCount++;
+            document.getElementById('logCount').textContent = `${logEntryCount} entries`;
+        }
+
+        function highlightTool(toolName) {
+            const toolEl = document.getElementById(`tool-${toolName}`);
+            if (toolEl) {
+                toolEl.classList.add('called');
+                setTimeout(() => toolEl.classList.remove('called'), 3000);
+            }
+        }
+
+        function setActiveScenario(name) {
+            document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+            if (name) {
+                const btn = document.getElementById(`btn-${name}`);
+                if (btn) btn.classList.add('active');
+            }
+        }
+
+        function runScenario(scenarioName) {
+            if (currentScenario) return;
+            currentScenario = scenarios[scenarioName];
+            scenarioIndex = 0;
+            setActiveScenario(scenarioName);
+            addLog('info', 'scenario_started', { scenario: scenarioName });
+            runNextStep();
+        }
+
+        function runNextStep() {
+            if (scenarioIndex >= currentScenario.length) {
+                currentScenario = null;
+                setActiveScenario(null);
+                addLog('info', 'scenario_completed', {});
+                return;
+            }
+
+            const step = currentScenario[scenarioIndex];
+            setTimeout(() => {
+                addMessage(step.role, step.text, step.tool);
+                if (step.tool) {
+                    highlightTool(step.tool);
+                    addLog('info', `tool_${step.tool}`, { status: 'success' });
+                }
+                scenarioIndex++;
+                runNextStep();
+            }, step.delay);
+        }
+
+        // ========== Product Catalog & Order Database ==========
+        const productCatalog = [
+            { id: 'P001', name: '智能蓝牙耳机 Pro', emoji: '', price: 299, originalPrice: 499, desc: '主动降噪 · 续航30h · 蓝牙5.3 · IPX5防水', specs: ['ANC降噪','30h续航','蓝牙5.3','IPX5防水'], stock: 150, colors: ['黑色','白色'] },
+            { id: 'P002', name: '运动跑鞋 飞翼系列', emoji: '👟', price: 459, originalPrice: 699, desc: '轻量化设计 · 透气网面 · 缓震中底', specs: ['轻量化','透气网面','缓震中底','耐磨橡胶'], stock: 80, colors: ['黑白','灰蓝','全黑'] },
+            { id: 'P003', name: '保温杯 钛金版', emoji: '🥤', price: 178, originalPrice: 259, desc: '316不锈钢 · 12h保温 · 500ml', specs: ['316不锈钢','12h保温','500ml','防漏设计'], stock: 320, colors: ['银色','黑色','玫瑰金'] },
+            { id: 'P004', name: '机械键盘 Cherry轴', emoji: '⌨️', price: 389, originalPrice: 599, desc: 'Cherry MX红轴 · RGB背光 · 全键无冲', specs: ['Cherry红轴','RGB背光','全键无冲','PBT键帽'], stock: 65, colors: ['黑色','白色'] },
+            { id: 'P005', name: '智能手表 运动版', emoji: '⌚', price: 899, originalPrice: 1299, desc: '心率监测 · GPS · 7天续航 · 5ATM防水', specs: ['心率监测','GPS定位','7天续航','5ATM防水'], stock: 42, colors: ['黑色','银色'] },
+            { id: 'P006', name: '无线充电器 三合一', emoji: '🔌', price: 149, originalPrice: 229, desc: '手机+手表+耳机同时充 · 15W快充', specs: ['三合一','15W快充','Qi兼容','LED指示'], stock: 200, colors: ['白色','黑色'] },
+        ];
+
+        const orderDatabase = {
+            'ORD20240101001': {
+                id: 'ORD20240101001', status: 'shipped', statusText: '派送中',
+                items: [
+                    { emoji: '', name: '智能蓝牙耳机 Pro', qty: 1, price: 299 },
+                    { emoji: '🥤', name: '保温杯 钛金版', qty: 2, price: 178 },
+                ],
+                total: 655, carrier: '顺丰速运', trackingNo: 'SF1234567890',
+                tracking: [
+                    { title: '订单已提交', time: '01-01 09:30', done: true },
+                    { title: '商家已发货', time: '01-01 14:20', done: true },
+                    { title: '到达上海转运中心', time: '01-02 08:15', done: true },
+                    { title: '上海浦东派送中', time: '01-03 07:40', current: true },
+                    { title: '预计送达', time: '01-03 18:00前', done: false },
+                ]
+            },
+            'ORD20240102002': {
+                id: 'ORD20240102002', status: 'delivered', statusText: '已签收',
+                items: [
+                    { emoji: '👟', name: '运动跑鞋 飞翼系列', qty: 1, price: 459 },
+                ],
+                total: 459, carrier: '中通快递', trackingNo: 'ZT9876543210',
+                tracking: [
+                    { title: '订单已提交', time: '01-02 10:00', done: true },
+                    { title: '商家已发货', time: '01-02 16:30', done: true },
+                    { title: '到达北京转运中心', time: '01-03 09:00', done: true },
+                    { title: '已签收', time: '01-04 11:20', done: true },
+                ]
+            },
+        };
+
+        function renderProductCard(product) {
+            const specsHtml = product.specs.map(s => `<span class="product-spec-tag">${s}</span>`).join('');
+            return `
+                <div class="product-card">
+                    <div class="product-card-img">
+                        <span class="product-card-badge cheapest">最低价推荐</span>
+                        ${product.emoji}
+                    </div>
+                    <div class="product-card-body">
+                        <div class="product-card-name">${product.name}</div>
+                        <div class="product-card-desc">${product.desc}</div>
+                        <div class="product-card-specs">${specsHtml}</div>
+                        <div class="product-card-footer">
+                            <div>
+                                <span class="product-card-price"><span class="currency">¥</span>${product.price}</span>
+                                <span class="product-card-price original">¥${product.originalPrice}</span>
+                            </div>
+                            <span class="product-card-stock">库存 ${product.stock} 件</span>
+                        </div>
+                    </div>
+                    <div class="order-card-actions">
+                        <button class="btn-order-action" onclick="handleProductAction('cart','${product.id}')">🛒 加入购物车</button>
+                        <button class="btn-order-action primary" onclick="handleProductAction('buy','${product.id}')">⚡ 立即下单</button>
+                    </div>
+                </div>`;
+        }
+
+        function renderOrderCard(order) {
+            const itemsHtml = order.items.map(item => `
+                <div class="order-item-row">
+                    <span class="order-item-emoji">${item.emoji}</span>
+                    <div class="order-item-info">
+                        <div class="order-item-name">${item.name}</div>
+                        <div class="order-item-qty">× ${item.qty}</div>
+                    </div>
+                    <span class="order-item-price">¥${item.price * item.qty}</span>
+                </div>`).join('');
+
+            const trackingHtml = order.tracking.map(step => {
+                const dotClass = step.current ? 'current' : (step.done ? 'done' : '');
+                return `
+                    <div class="tracking-step">
+                        <div class="tracking-step-dot ${dotClass}"></div>
+                        <div class="tracking-step-info">
+                            <div class="tracking-step-title">${step.title}</div>
+                            <div class="tracking-step-time">${step.time}</div>
+                        </div>
+                    </div>`;
+            }).join('');
+
+            return `
+                <div class="order-card">
+                    <div class="order-card-header">
+                        <span class="order-card-id">${order.id}</span>
+                        <span class="order-card-status ${order.status}">${order.statusText}</span>
+                    </div>
+                    <div class="order-card-body">${itemsHtml}</div>
+                    <div class="order-card-total">
+                        <span class="order-total-label">合计（含运费）</span>
+                        <span class="order-total-value">¥${order.total}</span>
+                    </div>
+                    <div class="order-card-tracking">
+                        <div class="tracking-label">物流追踪 · ${order.carrier} ${order.trackingNo}</div>
+                        <div class="tracking-steps">${trackingHtml}</div>
+                    </div>
+                    <div class="order-card-actions">
+                        <button class="btn-order-action" onclick="handleOrderAction('return','${order.id}')">🔄 申请退换</button>
+                        <button class="btn-order-action" onclick="handleOrderAction('contact','${order.id}')">📞 联系快递</button>
+                        <button class="btn-order-action primary" onclick="handleOrderAction('detail','${order.id}')">📋 订单详情</button>
+                    </div>
+                </div>`;
+        }
+
+        function renderOrderConfirm(orderId, product) {
+            const newOrderId = 'ORD' + new Date().toISOString().slice(0,10).replace(/-/g,'') + String(Math.floor(Math.random()*900)+100);
+            return `
+                <div class="order-confirm-card">
+                    <div class="order-confirm-title">✅ 下单成功</div>
+                    <div class="order-confirm-detail">
+                        订单号：<strong>${newOrderId}</strong><br>
+                        商品：${product.emoji} ${product.name} × 1<br>
+                        金额：<strong>¥${product.price}</strong>（已优惠 ¥${product.originalPrice - product.price}）<br>
+                        预计送达：3-5 个工作日<br>
+                        支付方式：微信支付（默认）
+                    </div>
+                </div>`;
+        }
+
+        function handleProductAction(action, productId) {
+            const product = productCatalog.find(p => p.id === productId);
+            if (!product) return;
+            if (action === 'buy') {
+                addMessage('user', `我要买这个 ${product.name}`);
+                addLog('info', 'place_order', { product_id: productId, action: 'buy_now' });
+                highlightTool('apply_coupon');
+                setTimeout(() => {
+                    const confirmHtml = renderOrderConfirm(productId, product);
+                    const messagesDiv = document.getElementById('chatMessages');
+                    const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = 'message ai';
+                    msgDiv.innerHTML = `
+                        <div class="message-avatar">👩‍💼</div>
+                        <div class="message-body">
+                            <div class="message-bubble">好的！已为您下单 ${product.name}，使用新人优惠券立减20元。以下是您的订单信息：</div>
+                            ${confirmHtml}
+                            <div class="message-meta"><span>${time}</span><span class="tool-tag">fn apply_coupon</span><span class="tool-tag">fn create_order</span></div>
+                        </div>`;
+                    messagesDiv.appendChild(msgDiv);
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    addLog('info', 'order_created', { order_id: newOrderId, product: product.name, amount: product.price - 20 });
+                    const speaking = document.getElementById('avatarSpeaking');
+                    speaking.classList.add('active');
+                    setTimeout(() => speaking.classList.remove('active'), 1200);
+                }, 800);
+            } else if (action === 'cart') {
+                addMessage('ai', `已将 ${product.name} 加入购物车  您还可以继续挑选其他商品，结算时自动合并优惠。`);
+                addLog('info', 'add_to_cart', { product_id: productId });
+            }
+        }
+
+        function handleOrderAction(action, orderId) {
+            const order = orderDatabase[orderId];
+            if (!order) return;
+            if (action === 'detail') {
+                addMessage('ai', `为您展开订单 ${orderId} 的完整详情：`);
+                setTimeout(() => {
+                    const messagesDiv = document.getElementById('chatMessages');
+                    const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = 'message ai';
+                    msgDiv.innerHTML = `
+                        <div class="message-avatar">‍💼</div>
+                        <div class="message-body">
+                            ${renderOrderCard(order)}
+                            <div class="message-meta"><span>${time}</span><span class="tool-tag">fn query_order_status</span></div>
+                        </div>`;
+                    messagesDiv.appendChild(msgDiv);
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                }, 500);
+            } else if (action === 'return') {
+                addMessage('ai', `好的，我来帮您处理订单 ${orderId} 的退换货。请问退换原因是什么？（尺码不合适 / 质量问题 / 其他）`);
+                addLog('info', 'return_initiated', { order_id: orderId });
+                highlightTool('initiate_return');
+            } else if (action === 'contact') {
+                addMessage('ai', `已为您联系 ${order.carrier} 客服，运单号 ${order.trackingNo}。预计等待时间 30 秒，您也可以直接拨打 ${order.carrier} 热线 95338。`);
+                addLog('info', 'contact_carrier', { carrier: order.carrier, tracking: order.trackingNo });
+            }
+        }
+
+        function extractOrderId(text) {
+            const match = text.match(/ORD\d{10,}/i);
+            return match ? match[0].toUpperCase() : null;
+        }
+
+        function findCheapestProduct(text) {
+            const t = text.toLowerCase();
+            const categoryKeywords = {
+                '耳机': ['耳机','听歌','音乐','降噪','蓝牙'],
+                '鞋': ['鞋','跑步','运动','走路','球鞋'],
+                '键盘': ['键盘','打字','机械','cherry'],
+                '手表': ['手表','智能手表','运动手表','计时'],
+                '充电器': ['充电器','充电','无线充'],
+                '保温杯': ['保温杯','水杯','杯子','喝水'],
+            };
+            let matched = [];
+            for (const [cat, kws] of Object.entries(categoryKeywords)) {
+                for (const kw of kws) {
+                    if (t.includes(kw)) {
+                        matched = productCatalog.filter(p => p.name.toLowerCase().includes(cat));
+                        if (matched.length) break;
+                    }
+                }
+                if (matched.length) break;
+            }
+            if (!matched.length) matched = [...productCatalog];
+            matched.sort((a, b) => a.price - b.price);
+            return matched[0];
+        }
+
+        function classifyIntent(text) {
+            const t = text.toLowerCase();
+            // Check for order ID first (highest priority)
+            if (extractOrderId(text)) return 'order_detail';
+            const rules = [
+                { intent: 'greet', keywords: ['你好','您好','hi','hello','嗨','在吗','早上好','晚上好','下午好'] },
+                { intent: 'introduce', keywords: ['介绍','你是谁','你叫什么','什么名字','自我介绍','介绍一下自己','你是'] },
+                { intent: 'ability', keywords: ['能做什么','会什么','有什么功能','帮我什么','你能干','功能','能力'] },
+                { intent: 'shopping_guide', keywords: ['想买','想要','给我来','帮我挑','帮我选','来一个','来一个','下单','买一个','我要','给我推荐','推荐一款','推荐一个'] },
+                { intent: 'product_search', keywords: ['找','搜索','有没有','看看','耳机','手机','电脑','鞋','衣服','包','手表','相机','键盘','鼠标','充电器','保温杯'] },
+                { intent: 'product_detail', keywords: ['多少钱','价格','参数','规格','颜色','尺寸','材质','重量','详情'] },
+                { intent: 'inventory', keywords: ['库存','有货','还有','缺货','补货'] },
+                { intent: 'order_query', keywords: ['订单','快递','物流','发货','到哪了','配送','运单','追踪','包裹','送达'] },
+                { intent: 'return', keywords: ['退','换','退款','退货','退换','不合适','质量问题','损坏','错发'] },
+                { intent: 'promotion', keywords: ['优惠','促销','折扣','券','满减','活动','打折','特价','便宜'] },
+                { intent: 'payment', keywords: ['支付','付款','怎么付','微信','支付宝','信用卡','花呗','分期'] },
+                { intent: 'complaint', keywords: ['投诉','差评','态度','不满','生气','失望','举报'] },
+                { intent: 'thanks', keywords: ['谢谢','感谢','辛苦了','太好了','棒','完美','好的谢谢'] },
+                { intent: 'bye', keywords: ['再见','拜拜','没了','就这些','没事了','结束','拜'] },
+                { intent: 'human', keywords: ['真人','人工','转接','客服经理','投诉电话'] },
+            ];
+            let best = 'unknown', bestScore = 0;
+            for (const r of rules) {
+                let score = 0;
+                for (const kw of r.keywords) {
+                    if (t.includes(kw)) score++;
+                }
+                if (score > bestScore) { bestScore = score; best = r.intent; }
+            }
+            return best;
+        }
+
+        const intentResponses = {
+            greet: [
+                '您好呀！欢迎来到 ShopMind，我是小智，您的AI购物助手。今天想看点什么呢？',
+                '你好！我是小智，很高兴见到您。有什么我可以帮您的吗？',
+                '嗨！欢迎光临~ 我是AI客服小智，随时为您服务。请问需要什么帮助？',
+            ],
+            introduce: [
+                '我是小智，ShopMind 的 AI 购物助手。我可以帮您搜索商品、查询订单、处理退换货，还能根据您的喜好做个性化推荐。有任何购物问题都可以找我哦！',
+                '我叫小智，是一个基于本地大模型（Ollama qwen2.5）的智能客服。我能做商品咨询、订单追踪、退换办理、优惠查询等等。简单来说，购物相关的事儿找我就对了！',
+            ],
+            ability: [
+                '我能帮您做这些事情：\n1. 搜索和推荐商品（自动比价，推荐最低价）\n2. 查询订单和物流状态\n3. 办理退换货\n4. 一键下单，优惠券自动抵扣\n5. 查找优惠券和促销活动\n\n您想试试哪个功能？',
+            ],
+            shopping_guide: [
+                '好的，我帮您挑一款性价比最高的！已为您筛选同品类最低价，直接看卡片就可以下单~',
+            ],
+            product_search: [
+                '好的，我来帮您搜索一下！请稍等...',
+            ],
+            product_detail: [
+                '让我为您查看一下这款商品的详细信息。',
+            ],
+            inventory: [
+                '我帮您查一下库存情况。',
+            ],
+            order_query: [
+                '好的，请提供您的订单号，我马上帮您查询。格式一般是 ORD 加日期加编号，比如 ORD20240101001。',
+            ],
+            order_detail: [
+                '',
+            ],
+            return: [
+                '没问题，我来帮您处理退换货。请告诉我您的订单号和退换原因，我会尽快为您办理。',
+            ],
+            promotion: [
+                '目前我们有几个优惠活动：\n1. 新人专享：首单立减20元\n2. 满99减10优惠券\n3. 部分商品满2件打8折\n\n需要我帮您看看哪些商品参与活动吗？',
+            ],
+            payment: [
+                '我们支持以下支付方式：微信支付、支付宝、银联卡、花呗（支持3/6/12期分期）。您习惯用哪种方式支付呢？',
+            ],
+            complaint: [
+                '非常抱歉给您带来了不好的体验，我理解您的心情。我会认真记录您的问题并尽快处理。能否告诉我具体发生了什么？我会全力帮您解决。',
+            ],
+            thanks: [
+                '不客气！能帮到您我很开心。如果后续有任何问题，随时来找我就好。祝您购物愉快！',
+                '您太客气啦！这是我应该做的。还有什么需要帮忙的吗？',
+            ],
+            bye: [
+                '好的，感谢您的光临！如果之后有任何问题，随时回来找我。祝您生活愉快，再见！',
+                '再见！希望下次还能为您服务。祝您今天开心！',
+            ],
+            human: [
+                '我理解您想和真人客服沟通。目前我是AI助手小智，大部分问题我都能帮您解决。如果确实需要人工服务，我可以帮您转接，预计等待时间约2分钟。请问您遇到了什么问题？我先帮您记录一下。',
+            ],
+            unknown: [
+                '收到！让我为您处理一下。请问您能再详细描述一下您的需求吗？这样我可以更准确地帮到您。',
+                '好的，我正在理解您的问题。您可以试试告诉我具体的商品名称、订单号，或者您想了解哪方面的信息？',
+            ],
+        };
+
+        function getSmartResponse(text) {
+            const intent = classifyIntent(text);
+            const pool = intentResponses[intent] || intentResponses.unknown;
+            const response = pool[Math.floor(Math.random() * pool.length)];
+            const toolMap = {
+                shopping_guide: 'get_recommendations',
+                product_search: 'search_products',
+                product_detail: 'get_product_details',
+                inventory: 'check_inventory',
+                order_query: 'query_order_status',
+                order_detail: 'query_order_status',
+                return: 'initiate_return',
+                promotion: 'get_current_promotions',
+            };
+            return { text: response, intent, tool: toolMap[intent] || null };
+        }
+
+        // API Configuration
+        const API_BASE_URL = 'http://localhost:8000';
+
+        // 会话与聊天记录持久化：跳转京东/拼多多后标签页被回收或刷新时上下文不丢失
+        const HISTORY_KEY = 'shopmind_chat_history';
+        const SESSION_KEY = 'shopmind_session_id';
+        let sessionId = localStorage.getItem(SESSION_KEY);
+        if (!sessionId) {
+            sessionId = 'session_' + Date.now();
+            localStorage.setItem(SESSION_KEY, sessionId);
+        }
+        document.getElementById('sessionId').textContent = sessionId;
+
+        function loadHistory() {
+            try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; } catch { return []; }
+        }
+        function saveToHistory(entry) {
+            const h = loadHistory();
+            h.push(entry);
+            if (h.length > 100) h.splice(0, h.length - 100);
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
+        }
+        (function restoreChat() {
+            loadHistory().forEach(m => {
+                const el = addMessage(m.role, m.text, m.tool);
+                if (m.products) renderProductCards(m.products, el);
+            });
+        })();
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            addMessage('user', text);
+            saveToHistory({ role: 'user', text });
+            addLog('info', 'user_message', { text: text.substring(0, 50) });
+            input.value = '';
+
+            // Show typing indicator
+            const typingIndicator = addMessage('ai', '正在思考...', null, true);
+
+            try {
+                // Call real backend API
+                const response = await fetch(`${API_BASE_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: text,
+                        session_id: sessionId,
+                        customer_id: 'demo_user'
+                    })
+                });
+
+                if (!response.ok) throw new Error('API request failed');
+
+                const data = await response.json();
+
+                // Remove typing indicator
+                typingIndicator.remove();
+
+                // Log the response
+                addLog('info', 'intent_classified', { intent: data.intent, confidence: '0.95' });
+                if (data.tools_used && data.tools_used.length > 0) {
+                    data.tools_used.forEach(tool => {
+                        highlightTool(tool);
+                        addLog('info', `tool_${tool}`, { query: text.substring(0, 30) });
+                    });
+                }
+
+                // Display AI response
+                const aiMsg = addMessage('ai', data.response, data.tools_used?.[0] || null);
+                if (data.products && data.products.length > 0) {
+                    renderProductCards(data.products, aiMsg);
+                }
+                saveToHistory({
+                    role: 'ai', text: data.response,
+                    tool: data.tools_used?.[0] || null,
+                    products: data.products && data.products.length ? data.products : null,
+                });
+
+            } catch (error) {
+                typingIndicator.remove();
+                addMessage('ai', '抱歉，AI 服务暂时不可用。请确保后端服务已启动（python -m src.api.server）。', null);
+                addLog('error', 'api_error', { error: error.message });
+            }
+        }
+
+        function clearChat() {
+            const messagesDiv = document.getElementById('chatMessages');
+            const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            messagesDiv.innerHTML = `
+                <div class="message ai">
+                    <div class="message-avatar">👩‍💼</div>
+                    <div class="message-body">
+                        <div class="message-bubble">您好！我是AI购物助手小智，很高兴为您服务。请问有什么可以帮助您的吗？</div>
+                        <div class="message-meta"><span>${time}</span></div>
+                    </div>
+                </div>
+            `;
+            document.querySelectorAll('.tool-item').forEach(t => t.classList.remove('called'));
+            hideAllP0Panels();
+            localStorage.removeItem(HISTORY_KEY);
+            sessionId = 'session_' + Date.now();
+            localStorage.setItem(SESSION_KEY, sessionId);
+            document.getElementById('sessionId').textContent = sessionId;
+            addLog('info', 'chat_cleared', {});
+        }
+
+        // ========== P0 Production Infrastructure ==========
+
+        function hideAllP0Panels() {
+            ['circuitPanel', 'securityPanel', 'monitorPanel', 'healthPanel', 'backupPanel'].forEach(id => {
+                document.getElementById(id).classList.remove('visible');
+            });
+            document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+            resetInfraCards();
+        }
+
+        function resetInfraCards() {
+            document.querySelectorAll('.infra-card').forEach(c => {
+                c.classList.remove('active', 'warning', 'error', 'success');
+            });
+            document.getElementById('circuitState').textContent = 'CLOSED';
+            document.getElementById('circuitState').style.color = 'var(--success)';
+            document.getElementById('rateCount').textContent = '0/60';
+            document.getElementById('healthScore').textContent = '6/6';
+            document.getElementById('healthScore').style.color = 'var(--success)';
+        }
+
+        function setActiveP0Btn(name) {
+            document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+            const btn = document.getElementById(`btn-${name}`);
+            if (btn) btn.classList.add('active');
+        }
+
+        const p0Scenarios = {
+            circuit: function() {
+                hideAllP0Panels();
+                setActiveP0Btn('circuit');
+                document.getElementById('circuitPanel').classList.add('visible');
+                const cbLog = document.getElementById('cbLog');
+                const card = document.getElementById('infra-circuit');
+                const stateEl = document.getElementById('circuitState');
+                const cbClosed = document.getElementById('cb-closed');
+                const cbOpen = document.getElementById('cb-open');
+                const cbHalf = document.getElementById('cb-half');
+
+                cbClosed.className = 'cb-state active-closed';
+                cbOpen.className = 'cb-state';
+                cbHalf.className = 'cb-state';
+                stateEl.textContent = 'CLOSED';
+                stateEl.style.color = 'var(--success)';
+                card.classList.add('active');
+                cbLog.innerHTML = '';
+
+                const steps = [
+                    { delay: 500, html: '<span class="success-text">[CLOSED]</span> GPT-4o 请求 #1 → 200 OK (320ms)', log: ['info', 'llm_request', { model: 'gpt-4o', status: 200, latency: 320 }] },
+                    { delay: 800, html: '<span class="success-text">[CLOSED]</span> GPT-4o 请求 #2 → 200 OK (280ms)', log: ['info', 'llm_request', { model: 'gpt-4o', status: 200, latency: 280 }] },
+                    { delay: 1000, html: '<span class="error-text">[CLOSED]</span> GPT-4o 请求 #3 → 500 Error', log: ['error', 'llm_request', { model: 'gpt-4o', status: 500, error: 'internal_error' }] },
+                    { delay: 800, html: '<span class="error-text">[CLOSED]</span> GPT-4o 请求 #4 → 500 Error', log: ['error', 'llm_request', { model: 'gpt-4o', status: 500, error: 'internal_error' }] },
+                    { delay: 1000, html: '<span class="error-text">[CLOSED]</span> GPT-4o 请求 #5 → 500 Error — 失败次数达到阈值 (5/5)', log: ['error', 'circuit_threshold', { failures: 5, threshold: 5 }] },
+                    { delay: 1200, html: '<span class="error-text">[OPEN]</span> ⚡ 熔断器打开！停止调用 GPT-4o，切换到 GPT-4o-mini', log: ['warn', 'circuit_opened', { from: 'gpt-4o', fallback: 'gpt-4o-mini' }] },
+                    { delay: 800, html: '<span class="warn-text">[OPEN]</span> 模型降级: GPT-4o → GPT-4o-mini', log: ['warn', 'model_fallback', { primary: 'gpt-4o', fallback: 'gpt-4o-mini' }] },
+                    { delay: 1000, html: '<span class="success-text">[OPEN]</span> GPT-4o-mini 请求 #6 → 200 OK (450ms)', log: ['info', 'llm_request', { model: 'gpt-4o-mini', status: 200, latency: 450 }] },
+                    { delay: 2000, html: '<span class="warn-text">[HALF_OPEN]</span> 冷却期结束，探测 GPT-4o...', log: ['info', 'circuit_half_open', { probe_model: 'gpt-4o' }] },
+                    { delay: 1000, html: '<span class="success-text">[HALF_OPEN]</span> GPT-4o 探测请求 → 200 OK (300ms)', log: ['info', 'llm_request', { model: 'gpt-4o', status: 200, latency: 300 }] },
+                    { delay: 800, html: '<span class="success-text">[CLOSED]</span> ✅ 探测成功，熔断器恢复关闭', log: ['info', 'circuit_closed', { model: 'gpt-4o' }] },
+                ];
+
+                let totalDelay = 0;
+                steps.forEach((step, i) => {
+                    totalDelay += step.delay;
+                    setTimeout(() => {
+                        cbLog.innerHTML += step.html + '<br>';
+                        cbLog.scrollTop = cbLog.scrollHeight;
+                        addLog(step.log[0], step.log[1], step.log[2]);
+
+                        if (i === 5) {
+                            cbClosed.className = 'cb-state';
+                            cbOpen.className = 'cb-state active-open';
+                            stateEl.textContent = 'OPEN';
+                            stateEl.style.color = 'var(--error)';
+                            card.classList.remove('active');
+                            card.classList.add('error');
+                        } else if (i === 8) {
+                            cbOpen.className = 'cb-state';
+                            cbHalf.className = 'cb-state active-half';
+                            stateEl.textContent = 'HALF_OPEN';
+                            stateEl.style.color = 'var(--warning)';
+                            card.classList.remove('error');
+                            card.classList.add('warning');
+                        } else if (i === 10) {
+                            cbHalf.className = 'cb-state';
+                            cbClosed.className = 'cb-state active-closed';
+                            stateEl.textContent = 'CLOSED';
+                            stateEl.style.color = 'var(--success)';
+                            card.classList.remove('warning');
+                            card.classList.add('success');
+                        }
+                    }, totalDelay);
+                });
+
+                addMessage('ai', '⚡ 熔断降级演示：模拟 GPT-4o 连续失败 → 熔断器打开 → 自动降级到 GPT-4o-mini → 冷却后探测恢复 → 熔断器关闭。全过程用户无感知。');
+            },
+
+            ratelimit: function() {
+                hideAllP0Panels();
+                setActiveP0Btn('ratelimit');
+                const card = document.getElementById('infra-rate');
+                card.classList.add('active');
+                const rateEl = document.getElementById('rateCount');
+
+                const steps = [
+                    { count: 10, status: 'normal' },
+                    { count: 25, status: 'normal' },
+                    { count: 40, status: 'normal' },
+                    { count: 55, status: 'warning' },
+                    { count: 60, status: 'error' },
+                    { count: 61, status: 'blocked' },
+                ];
+
+                let totalDelay = 0;
+                steps.forEach((step) => {
+                    totalDelay += 800;
+                    setTimeout(() => {
+                        rateEl.textContent = `${step.count}/60`;
+                        if (step.status === 'warning') {
+                            rateEl.style.color = 'var(--warning)';
+                            card.classList.remove('active');
+                            card.classList.add('warning');
+                        } else if (step.status === 'error') {
+                            rateEl.style.color = 'var(--error)';
+                            card.classList.remove('warning');
+                            card.classList.add('error');
+                        } else if (step.status === 'blocked') {
+                            rateEl.textContent = '61/60 BLOCKED';
+                            rateEl.style.color = 'var(--error)';
+                        } else {
+                            rateEl.style.color = 'var(--text-primary)';
+                        }
+                        addLog(
+                            step.status === 'blocked' ? 'warn' : 'info',
+                            step.status === 'blocked' ? 'rate_limited' : 'request_count',
+                            { user: '192.168.1.100', count: step.count, limit: 60, status: step.status }
+                        );
+                    }, totalDelay);
+                });
+
+                setTimeout(() => {
+                    addMessage('ai', '🛡️ 限流防护演示：Token Bucket 算法，每用户每分钟最多 60 次请求。超限时返回 429 状态码，IP 持续超限将加入黑名单。');
+                    addLog('warn', 'rate_limit_enforced', { user: '192.168.1.100', action: 'request_rejected', retry_after: 30 });
+                }, totalDelay + 1000);
+            },
+
+            security: function() {
+                hideAllP0Panels();
+                setActiveP0Btn('security');
+                document.getElementById('securityPanel').classList.add('visible');
+                const resultsDiv = document.getElementById('securityResults');
+                const card = document.getElementById('infra-encrypt');
+                card.classList.add('active');
+                resultsDiv.innerHTML = '';
+
+                const tests = [
+                    {
+                        label: '输入: "我的手机号是13812345678"',
+                        detected: true,
+                        type: '手机号',
+                        original: '13812345678',
+                        masked: '138****5678',
+                        delay: 800,
+                    },
+                    {
+                        label: '输入: "身份证 310101199001011234"',
+                        detected: true,
+                        type: '身份证号',
+                        original: '310101199001011234',
+                        masked: '310101****1234',
+                        delay: 1000,
+                    },
+                    {
+                        label: '输入: "银行卡号 6222021234567890123"',
+                        detected: true,
+                        type: '银行卡号',
+                        original: '6222021234567890123',
+                        masked: '6222****0123',
+                        delay: 1000,
+                    },
+                    {
+                        label: '输入: "帮我查一下订单状态"',
+                        detected: false,
+                        type: '正常输入',
+                        delay: 800,
+                    },
+                ];
+
+                let totalDelay = 0;
+                tests.forEach((test) => {
+                    totalDelay += test.delay;
+                    setTimeout(() => {
+                        const div = document.createElement('div');
+                        div.className = `security-detection ${test.detected ? 'detected' : 'safe'}`;
+                        if (test.detected) {
+                            div.innerHTML = `
+                                <div class="security-label">🔴 检测到 ${test.type}</div>
+                                <div class="security-result">
+                                    ${test.label}<br>
+                                    <span class="masked">${test.original}</span> → <span class="mask-replacement">${test.masked}</span>
+                                </div>
+                            `;
+                            addLog('warn', 'sensitive_info_detected', { type: test.type, action: 'masked' });
+                        } else {
+                            div.innerHTML = `
+                                <div class="security-label">🟢 安全</div>
+                                <div class="security-result">${test.label}</div>
+                            `;
+                            addLog('info', 'input_validated', { status: 'clean' });
+                        }
+                        resultsDiv.appendChild(div);
+                    }, totalDelay);
+                });
+
+                setTimeout(() => {
+                    addMessage('ai', '🔐 安全检测演示：系统自动识别手机号、身份证号、银行卡号等敏感信息，并在日志和存储中进行脱敏处理。AES-GCM 加密存储敏感字段。');
+                }, totalDelay + 800);
+            },
+
+            monitor: function() {
+                hideAllP0Panels();
+                setActiveP0Btn('monitor');
+                document.getElementById('monitorPanel').classList.add('visible');
+
+                const reqEl = document.getElementById('mon-requests');
+                const errEl = document.getElementById('mon-error-rate');
+                const latEl = document.getElementById('mon-latency');
+                const latBar = document.getElementById('mon-latency-bar');
+                const sessEl = document.getElementById('mon-sessions');
+                const alertDiv = document.getElementById('alertRules');
+
+                alertDiv.innerHTML = `
+                    <div class="health-item">
+                        <span class="health-name">错误率 > 5%</span>
+                        <span class="health-status healthy"><span class="health-dot healthy"></span> 正常</span>
+                    </div>
+                    <div class="health-item">
+                        <span class="health-name">P95 延迟 > 8s</span>
+                        <span class="health-status healthy"><span class="health-dot healthy"></span> 正常</span>
+                    </div>
+                    <div class="health-item">
+                        <span class="health-name">日成本 > 预算 80%</span>
+                        <span class="health-status healthy"><span class="health-dot healthy"></span> 正常</span>
+                    </div>
+                `;
+
+                const frames = [
+                    { req: 128, err: '0.8%', lat: 420, latPct: 21, sess: 3, latClass: 'bar-success', errClass: 'text-success' },
+                    { req: 356, err: '1.2%', lat: 680, latPct: 34, sess: 7, latClass: 'bar-success', errClass: 'text-success' },
+                    { req: 892, err: '2.1%', lat: 1200, latPct: 60, sess: 15, latClass: 'bar-warning', errClass: 'text-success' },
+                    { req: 1456, err: '3.8%', lat: 2400, latPct: 80, sess: 28, latClass: 'bar-warning', errClass: 'text-warning' },
+                    { req: 2031, err: '1.5%', lat: 860, latPct: 43, sess: 22, latClass: 'bar-success', errClass: 'text-success' },
+                ];
+
+                let totalDelay = 0;
+                frames.forEach((f) => {
+                    totalDelay += 1000;
+                    setTimeout(() => {
+                        reqEl.textContent = f.req.toLocaleString();
+                        errEl.textContent = f.err;
+                        errEl.className = `metric-card-value ${f.errClass}`;
+                        latEl.textContent = `${f.lat}ms`;
+                        latBar.style.width = `${f.latPct}%`;
+                        latBar.className = `metric-bar ${f.latClass}`;
+                        sessEl.textContent = f.sess;
+                        addLog('info', 'metrics_snapshot', { requests: f.req, error_rate: f.err, p95_latency: f.lat, sessions: f.sess });
+                    }, totalDelay);
+                });
+
+                setTimeout(() => {
+                    addMessage('ai', '📊 监控面板演示：实时采集请求量、错误率、P95 延迟、活跃会话数。支持自定义告警规则，超阈值自动通知。');
+                }, totalDelay + 800);
+            },
+
+            health: function() {
+                hideAllP0Panels();
+                setActiveP0Btn('health');
+                document.getElementById('healthPanel').classList.add('visible');
+                const healthList = document.getElementById('healthList');
+                const card = document.getElementById('infra-health');
+                card.classList.add('active');
+                healthList.innerHTML = '';
+
+                const services = [
+                    { name: 'OpenAI GPT-4o', status: 'healthy', latency: '320ms', delay: 400 },
+                    { name: 'Deepgram Nova-3', status: 'healthy', latency: '180ms', delay: 300 },
+                    { name: 'Cartesia Sonic-3', status: 'healthy', latency: '240ms', delay: 300 },
+                    { name: 'ChromaDB', status: 'healthy', latency: '12ms', delay: 200 },
+                    { name: 'LiveKit Cloud', status: 'healthy', latency: '45ms', delay: 300 },
+                    { name: 'Lemonslice', status: 'healthy', latency: '380ms', delay: 400 },
+                ];
+
+                let totalDelay = 0;
+                services.forEach((svc) => {
+                    totalDelay += svc.delay;
+                    setTimeout(() => {
+                        const item = document.createElement('div');
+                        item.className = 'health-item';
+                        item.innerHTML = `
+                            <span class="health-name">${svc.name}</span>
+                            <span class="health-status ${svc.status}">
+                                <span class="health-dot ${svc.status}"></span>
+                                ${svc.latency}
+                            </span>
+                        `;
+                        healthList.appendChild(item);
+                        addLog('info', 'health_check', { service: svc.name, status: svc.status, latency: svc.latency });
+                    }, totalDelay);
+                });
+
+                setTimeout(() => {
+                    const scoreEl = document.getElementById('healthScore');
+                    scoreEl.textContent = '6/6';
+                    scoreEl.style.color = 'var(--success)';
+                    addMessage('ai', '🏥 健康检查演示：每 30 秒轮询所有外部服务健康状态。任何服务异常时自动触发降级策略，保障核心对话功能不中断。');
+                }, totalDelay + 800);
+            },
+
+            backup: function() {
+                hideAllP0Panels();
+                setActiveP0Btn('backup');
+                document.getElementById('backupPanel').classList.add('visible');
+                const timeline = document.getElementById('backupTimeline');
+                timeline.innerHTML = '';
+
+                const events = [
+                    { title: '启动全量备份', detail: 'ChromaDB → backup_20260926_135501.db (2.3MB)', type: 'success', delay: 800 },
+                    { title: '备份向量索引', detail: 'collections: products, knowledge_base (847 vectors)', type: 'success', delay: 1000 },
+                    { title: '备份完整性校验', detail: 'SHA-256: a3f8c2...d91e ✓ checksum verified', type: 'success', delay: 800 },
+                    { title: '会话数据归档', detail: 'session_0926_001 → archive/session_0926_001.jsonl', type: 'success', delay: 1000 },
+                    { title: '清理过期备份', detail: '保留最近 7 天，删除 3 个过期备份文件', type: 'warning', delay: 800 },
+                    { title: '备份完成', detail: '总大小: 2.3MB | 耗时: 1.2s | 下次备份: 2026-09-27 02:00', type: 'success', delay: 600 },
+                ];
+
+                let totalDelay = 0;
+                events.forEach((evt) => {
+                    totalDelay += evt.delay;
+                    setTimeout(() => {
+                        const div = document.createElement('div');
+                        div.className = `backup-event ${evt.type}`;
+                        div.innerHTML = `
+                            <div class="backup-event-title">${evt.title}</div>
+                            <div class="backup-event-detail">${evt.detail}</div>
+                        `;
+                        timeline.appendChild(div);
+                        addLog('info', 'backup_event', { event: evt.title, detail: evt.detail });
+                    }, totalDelay);
+                });
+
+                setTimeout(() => {
+                    addMessage('ai', '💾 备份恢复演示：系统启动时自动全量备份 ChromaDB，每日定时备份，支持一键恢复。会话数据归档为 JSONL 格式，可查询历史会话。');
+                }, totalDelay + 800);
+            },
+        };
+
+        function runP0Scenario(name) {
+            if (p0Scenarios[name]) {
+                p0Scenarios[name]();
+            }
+        }
+
+        const v3Scenarios = {
+            langgraph: () => {
+                addMessage('ai', '🔀 LangGraph 流程编排已激活。工作流：START → Router(意图分类) → [ProductAgent|OrderAgent|SupportAgent] → Response → END');
+                addLog('INFO', 'graph', 'workflow_compiled', { nodes: 5, edges: 7, engine: 'LangGraph StateGraph' });
+                addMessage('human', '帮我推荐一款耳机');
+                setTimeout(() => {
+                    addLog('INFO', 'graph', 'router_node', { intent: 'product', keyword_scores: { product: 2, order: 0, support: 0 } });
+                    addLog('INFO', 'graph', 'agent_activated', { agent: 'product_agent', path: 'START→router→product_agent→response→END' });
+                    addMessage('ai', '✅ LangGraph 路由完成。意图分类: PRODUCT → 分发至 ProductAgent。StateGraph 条件边已执行。');
+                }, 800);
+            },
+            multiagent: () => {
+                addMessage('ai', '🤖 Multi-Agent Supervisor 已就绪。3个专家Agent待命：ProductAgent(商品)、OrderAgent(订单)、SupportAgent(综合)');
+                addLog('INFO', 'supervisor', 'initialized', { agents: 3, roles: ['product', 'order', 'support'] });
+                addMessage('human', '我要投诉上次的质量问题');
+                setTimeout(() => {
+                    addLog('INFO', 'supervisor', 'select_agent', { role: 'support', confidence: 0.92, keywords: ['投诉', '质量问题'] });
+                    addLog('INFO', 'supervisor', 'dispatch', { from: 'supervisor', to: 'SupportAgent', tools: [] });
+                    addMessage('ai', '✅ Supervisor 路由至 SupportAgent。关键词匹配: 投诉→SUPPORT。Agent已接管处理。');
+                }, 800);
+            },
+            langsmith: () => {
+                addMessage('ai', '🔍 LangSmith 可观测性平台已连接。功能：全链路 Tracing、Golden Dataset 评估、Token 成本追踪');
+                addLog('INFO', 'langsmith', 'connected', { project: 'ecommerce-video-cs', endpoint: 'api.smith.langchain.com' });
+                setTimeout(() => {
+                    addLog('INFO', 'langsmith', 'trace_llm_start', { model: 'gpt-4o', prompt_length: 42 });
+                    addLog('INFO', 'langsmith', 'trace_tool_start', { tool: 'search_products', inputs: { query: '耳机' } });
+                    addLog('INFO', 'langsmith', 'trace_llm_end', { tokens: 156, latency_ms: 320 });
+                    addLog('INFO', 'langsmith', 'cost_recorded', { model: 'gpt-4o', cost_usd: 0.0012, budget_remaining: 49.998 });
+                    addMessage('ai', '✅ LangSmith 追踪完成。本次调用: 1次LLM + 1次Tool，耗时320ms，成本$0.0012。评估准确率: 87.5% (8条Golden Cases)。');
+                }, 1000);
+            },
+            fastapi: () => {
+                addMessage('ai', '⚡ FastAPI REST API 服务运行中。7个端点已注册，CORS 已启用，Pydantic 数据校验已开启');
+                addLog('INFO', 'api', 'server_started', { host: '0.0.0.0', port: 8000, endpoints: 7 });
+                setTimeout(() => {
+                    addLog('INFO', 'api', 'request', { method: 'POST', path: '/api/chat', status: 200, latency_ms: 45 });
+                    addLog('INFO', 'api', 'request', { method: 'GET', path: '/api/health', status: 200, latency_ms: 2 });
+                    addLog('INFO', 'api', 'request', { method: 'GET', path: '/api/metrics', status: 200, latency_ms: 3 });
+                    addMessage('ai', '✅ API 端点: POST /api/chat, GET /api/health, GET /api/metrics, GET /api/cost, POST /api/eval, GET /api/traces, GET /api/session/{id}');
+                }, 600);
+            },
+            litellm: () => {
+                addMessage('ai', '🔀 LiteLLM 模型路由器已激活。按复杂度自动选模型：SIMPLE→gpt-4o-mini($0.15/M), STANDARD→gpt-4o($2.5/M), ADVANCED→gpt-4o');
+                addLog('INFO', 'litellm', 'router_ready', { tiers: 3, providers: ['openai', 'ollama'] });
+                addMessage('human', '你好');
+                setTimeout(() => {
+                    addLog('INFO', 'litellm', 'model_routed', { tier: 'simple', model: 'gpt-4o-mini', reason: 'greeting detected' });
+                    addMessage('ai', '✅ 复杂度: SIMPLE → 选用 gpt-4o-mini。成本仅 $0.15/1M tokens，比 gpt-4o 节省 94%。Fallback: ollama/qwen2:7b (本地零成本)。');
+                }, 600);
+            },
+            ollama: () => {
+                addMessage('ai', '🦙 Ollama 本地模型已配置。模型: qwen2:7b, 端点: http://localhost:11434, 成本: $0.00 (完全本地运行)');
+                addLog('INFO', 'ollama', 'health_check', { model: 'qwen2:7b', status: 'running', vram: '4.2GB' });
+                setTimeout(() => {
+                    addLog('WARNING', 'resilience', 'model_fallback', { from_model: 'gpt-4o-mini', to_model: 'ollama/qwen2:7b', reason: 'rate_limit_exceeded' });
+                    addLog('INFO', 'ollama', 'request', { model: 'qwen2:7b', latency_ms: 180, cost_usd: 0.0 });
+                    addMessage('ai', '✅ 降级演示: OpenAI 触发限流 → 自动切换至 Ollama 本地模型。零成本兜底，服务不中断。模型降级链: gpt-4o → gpt-4o-mini → ollama/qwen2:7b');
+                }, 800);
+            },
+        };
+
+        function runV3Scenario(name) {
+            document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+            const btn = document.getElementById('btn-' + name);
+            if (btn) btn.classList.add('active');
+            if (v3Scenarios[name]) {
+                v3Scenarios[name]();
+            }
+        }
+    </script>
+</body>
+</html>

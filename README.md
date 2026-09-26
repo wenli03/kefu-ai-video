@@ -1,320 +1,338 @@
-# AI视频客服系统 (AI Video Customer Service)
+# E-commerce AI Video Customer Service
 
-> **基于WebSocket的实时AI数字人客服系统** — 支持语音识别、AI对话、数字人视频+音频同步应答
+基于 **LiveKit Agents** + **LangChain** 的电商AI视频客服系统。
 
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](package.json)
-[![React](https://img.shields.io/badge/react-19-blue)](web/package.json)
+> **v3.0 · 全栈 AI Agent** — 通过 117 项测试，覆盖 LangGraph / Multi-Agent / LangSmith / FastAPI / React
 
----
+## 项目概述
 
-## 🎯 项目亮点
+这是一个AI驱动的视频客服系统，为电商平台提供智能化的客户服务体验。客户可以通过视频与AI数字人客服进行实时交互，获得商品咨询、订单查询、售后处理等服务。
 
-- **69ms 极速响应** — TTS音频预缓存，文本+视频+音频同步抵达
-- **真人照片数字人** — 真实人像+Ken Burns动态效果
-- **音素级Viseme口型** — 拼音→宽/圆/展/中/撮 5级口型映射
-- **WebSocket实时对话** — 支持打断、自动告别挂断、会话管理
-- **零GPU依赖** — 全部在浏览器端渲染，无CUDA/GPU要求
-- **一键免费部署** — Render.com零成本发布到外网
+### 核心能力
 
----
+- **视频客服**：基于 LiveKit WebRTC 的实时音视频通信
+- **数字人形象**：使用 Lemonslice 生成的AI客服形象
+- **智能问答**：LangChain + RAG 驱动的商品知识检索
+- **订单服务**：订单状态查询、物流追踪、退换货处理
+- **商品推荐**：基于客户偏好的智能推荐
 
-## 📸 效果展示
+### v3.0 新增能力
 
-| 初始界面 | 连接AI客服 | 提问理赔 |
-|---------|-----------|---------|
-| ![初始](screenshots/01-initial.png) | ![连接](screenshots/02-connected.png) | ![理赔](screenshots/03-claim-response.png) |
+- **LangGraph 流程编排**：StateGraph 实现 START → Router → Agent → Response → END 工作流
+- **Multi-Agent 架构**：Supervisor 模式，ProductAgent / OrderAgent / SupportAgent 三专家协作
+- **LangSmith 集成**：全链路 Tracing、Evaluation Harness（8条 Golden Dataset）、Cost Tracking
+- **FastAPI REST API**：/api/chat、/api/session、/api/metrics、/api/health、/api/eval、/api/cost、/api/traces
+- **LiteLLM 模型路由**：按复杂度自动选模型（SIMPLE→gpt-4o-mini, STANDARD→gpt-4o, ADVANCED→gpt-4o）
+- **本地模型部署**：Ollama (qwen2:7b) 作为最终降级兜底，零成本运行
+- **React/Next.js 前端**：Next.js 14 + TypeScript 聊天界面，实时指标面板
 
-| 告别会话 | 会话结束 |
-|---------|---------|
-| ![告别](screenshots/04-goodbye.png) | ![结束](screenshots/05-session-ended.png) |
+### 生产保障 (P0)
 
----
+- **熔断降级**：Circuit Breaker 状态机 + GPT-4o → GPT-4o-mini 自动降级
+- **限流防护**：Token Bucket 算法，每用户每分钟 60 次请求上限
+- **安全检测**：手机号/身份证/银行卡自动识别 + AES-GCM 加密存储
+- **监控告警**：实时指标采集（请求量/错误率/P95延迟）+ 规则告警
+- **备份恢复**：ChromaDB 定时全量备份 + 会话归档 + 完整性校验
+- **健康检查**：6 个外部服务每 30 秒探测，异常自动触发降级
 
-## 🏗️ 华为4+1架构视图
+## 技术架构
 
-### 1. 逻辑视图 (Logical View)
-
-```mermaid
-graph TB
-    subgraph 浏览器["Browser (Customer)"]
-        UI[React UI - CustomerPage]
-        ASR[Web Speech API ASR]
-        VP[VideoPlayer + AvatarCanvas]
-        WS_C[WebSocket Client]
-    end
-
-    subgraph 服务端["Server Side"]
-        CC[CC Mock Server :8080]
-        TTS[TTS Cache - Static MP3]
-        SRS[SRS Media Server :1985]
-    end
-
-    UI --> WS_C
-    ASR --> UI
-    WS_C <-->|WebSocket| CC
-    CC --> TTS
-    CC --> SRS
-    VP -->|video/webm| UI
+```
+┌─────────────────────────────────────────────────────────────┐
+│           Frontend (Next.js 14 + React 18 + TypeScript)      │
+└────────────────────────────┬────────────────────────────────┘
+                             │ REST API / WebRTC
+┌────────────────────────────▼────────────────────────────────┐
+│              FastAPI Backend (REST API Layer)                 │
+│         /api/chat  /api/health  /api/metrics  /api/eval      │
+└────────────────────────────┬────────────────────────────────┘
+                             │
+┌────────────────────────────▼────────────────────────────────┐
+│           LangGraph StateGraph (流程编排引擎)                  │
+│     START → Router → [Product|Order|Support] → Response → END│
+└────────────────────────────┬────────────────────────────────┘
+                             │
+┌────────────────────────────▼────────────────────────────────┐
+│            Multi-Agent Supervisor (多Agent协作)                │
+│   ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
+│   │ ProductAgent │  │  OrderAgent  │  │  SupportAgent    │  │
+│   └──────────────┘  └──────────────┘  └──────────────────┘  │
+│                             │                                 │
+│  ┌──────────────────────────▼─────────────────────────────┐  │
+│  │         LiteLLM Router (模型路由 + 成本优化)              │  │
+│  │   SIMPLE → gpt-4o-mini  |  STANDARD → gpt-4o           │  │
+│  │   ADVANCED → gpt-4o     |  FALLBACK → ollama/qwen2:7b  │  │
+│  └────────────────────────────────────────────────────────┘  │
+│                             │                                 │
+│  ┌──────────────────────────▼─────────────────────────────┐  │
+│  │    LangSmith (Tracing + Eval + Cost Tracking)           │  │
+│  └────────────────────────────────────────────────────────┘  │
+│                             │                                 │
+│  ┌──────────────────────────▼─────────────────────────────┐  │
+│  │              LangChain RAG Engine                       │  │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌────────────────┐  │  │
+│  │  │  ChromaDB   │  │  Embeddings │  │  Product Data  │  │  │
+│  │  └─────────────┘  └─────────────┘  └────────────────┘  │  │
+│  └────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-**核心模块：**
-| 模块 | 职责 | 技术 |
+## 技术栈
+
+| 组件 | 技术 | 说明 |
 |------|------|------|
-| CustomerPage | 客户交互界面 | React 19 + TypeScript |
-| ChatPanel | 对话记录+文字输入 | React Component |
-| VideoAvatar | 数字人视频+音频播放 | Canvas2D + HTMLAudio |
-| CC Mock Server | 会话管理+关键词路由 | Node.js (zero deps) |
-| TTS Cache | 预生成语音应答 | Static MP3 (edge-tts) |
-| SRS | 流媒体中继 | SRS 5.0 (RTMP/WebRTC) |
+| 实时通信 | LiveKit | WebRTC 音视频基础设施 |
+| 语音识别 | Deepgram | 实时语音转文字 |
+| 大语言模型 | OpenAI GPT-4o | 对话理解与生成 |
+| 语音合成 | Cartesia | 文字转语音 |
+| 数字人 | Lemonslice | AI视频形象生成 |
+| RAG框架 | LangChain | 知识检索增强生成 |
+| 流程编排 | LangGraph | StateGraph 多Agent工作流 |
+| Agent框架 | Multi-Agent Supervisor | 意图路由 + 专家分工 |
+| 可观测性 | LangSmith | Tracing / Eval / Cost Tracking |
+| 模型路由 | LiteLLM | 复杂度分级 + 自动选模型 |
+| 本地模型 | Ollama (qwen2:7b) | 零成本降级兜底 |
+| 后端API | FastAPI | REST API + CORS + Pydantic |
+| 前端 | Next.js 14 + React 18 | TypeScript 聊天UI |
+| 向量数据库 | ChromaDB | 商品知识存储 |
+| 嵌入模型 | OpenAI Embeddings | 文本向量化 |
 
-### 2. 进程视图 (Process View)
+## 快速开始
 
-```mermaid
-sequenceDiagram
-    participant C as 客户浏览器
-    participant WS as WebSocket :8080
-    participant CC as CC Mock
-    participant TTS as TTS缓存
-    participant V as 数字人视频
+### 前置要求
 
-    C->>WS: {type:"call"}
-    WS->>CC: 创建会话
-    CC-->>WS: {type:"room-ready"}
-    WS-->>C: 连接成功
-    
-    C->>WS: {type:"audio", text:"理赔"}
-    WS->>CC: 关键词匹配
-    CC->>TTS: 查缓存
-    TTS-->>CC: base64 MP3 + viseme数据
-    CC-->>WS: {type:"ai-answer"}
-    CC-->>WS: {type:"tts-audio"}
-    CC-->>WS: {type:"video-play"}
-    WS-->>C: 文本+音频+视频 (69ms)
-    
-    C->>C: 播放视频 + 播放TTS音频
-```
+- Python 3.10+
+- LiveKit Cloud 账号（或本地 LiveKit Server）
+- API Keys:
+  - OpenAI API Key
+  - Deepgram API Key
+  - Cartesia API Key
+  - LiveKit API Key/Secret
 
-**进程拓扑：**
-```
-┌──────────────────────────────────────────┐
-│  Browser (Customer)                       │
-│  ├─ Web Speech API (ASR)                  │
-│  ├─ WebSocket Client                      │
-│  ├─ Video Element (greeting.webm loop)    │
-│  └─ Audio Element (TTS playback)          │
-└──────────────┬───────────────────────────┘
-               │ ws://localhost:8080/ws/cc
-┌──────────────▼───────────────────────────┐
-│  CC Mock Server :8080                     │
-│  ├─ HTTP: /api/cc/admin/stats             │
-│  ├─ WS: session/call/audio/transfer/end   │
-│  └─ TTS Cache: Map<answer, base64mp3>    │
-└──────────────┬───────────────────────────┘
-               │ static files
-┌──────────────▼───────────────────────────┐
-│  Vite Dev Server :5173                    │
-│  ├─ React SPA (Customer/Agent/Admin)      │
-│  ├─ /avatar-videos/*.webm (static)        │
-│  └─ /audio/*.mp3 (static)                 │
-└──────────────────────────────────────────┘
-```
-
-### 3. 开发视图 (Development View)
-
-```
-kefu_ai_video/
-├── web/                              # React前端 (Vite + TypeScript)
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── CustomerPage.tsx      # ★ 客户主页面
-│   │   │   ├── AgentPage.tsx         # 坐席页面
-│   │   │   └── AdminPage.tsx         # 管理后台
-│   │   ├── components/
-│   │   │   ├── VideoPlayer.tsx       # 本地摄像头播放器
-│   │   │   ├── VideoAvatar.tsx       # ★ AI数字人播放器
-│   │   │   ├── ChatPanel.tsx         # 对话面板
-│   │   │   └── StatusBar.tsx         # 状态栏
-│   │   ├── hooks/
-│   │   │   ├── useWebSocket.ts       # ★ WebSocket连接管理
-│   │   │   └── useWebRTC.ts          # WebRTC推拉流
-│   │   └── services/
-│   │       └── api.ts                # REST API封装
-│   ├── public/
-│   │   ├── audio/                    # ★ 预生成TTS音频
-│   │   │   ├── greeting.mp3          # 欢迎语音
-│   │   │   ├── claim.mp3             # 理赔语音
-│   │   │   ├── insurance.mp3         # 投保语音
-│   │   │   ├── refund.mp3            # 退保语音
-│   │   │   ├── renewal.mp3           # 续保语音
-│   │   │   └── goodbye.mp3           # 告别语音
-│   │   └── avatar-videos/            # ★ 数字人视频
-│   │       ├── greeting.webm         # 欢迎视频
-│   │       ├── claim-guide.webm      # 理赔视频
-│   │       ├── insurance-intro.webm  # 投保视频
-│   │       ├── refund-info.webm      # 退保视频
-│   │       └── renewal-info.webm     # 续保视频
-│   └── vite.config.ts
-│
-├── services/
-│   ├── cc-mock/
-│   │   └── server.js                 # ★ CC Mock (zero deps)
-│   ├── tts/
-│   │   └── server.py                 # edge-tts HTTP服务(备用)
-│   └── digital-human/
-│       └── generate.py               # 数字人视频生成(Playwright)
-│
-├── assets/avatar-videos/             # 视频源文件
-├── deploy-server.js                  # ★ 生产部署服务器(zero deps)
-├── render.yaml                       # Render.com一键部署配置
-├── docker-compose.yml                # Docker编排(SRS+Redis)
-├── srs.conf                          # SRS流媒体配置
-└── docs/
-    └── DEPLOY.md                     # 部署指南
-```
-
-### 4. 物理视图 (Physical View / 部署视图)
-
-```mermaid
-graph TB
-    subgraph Dev["开发环境 (Windows Localhost)"]
-        ViteDev[Vite :5173]
-        CCMock[CC Mock :8080]
-        SRSDev[SRS :1985/:1935]
-    end
-
-    subgraph Prod["生产环境 (Render.com Free Tier)"]
-        DeployServer[deploy-server.js]
-        StaticAssets[静态资源]
-    end
-
-    subgraph External["外部访问"]
-        GitHub[GitHub Repository]
-        RenderCDN[Render.com CDN]
-        EndUser[面试官/用户]
-    end
-
-    GitHub -->|git push| RenderCDN
-    RenderCDN --> DeployServer
-    DeployServer --> StaticAssets
-    EndUser -->|HTTPS| RenderCDN
-```
-
-**部署方案对比：**
-| 平台 | 费用 | 休眠 | 冷启动 | 适合场景 |
-|------|------|------|--------|---------|
-| Render.com | 免费 | 15min无请求后休眠 | ~30s | 面试展示、低频测试 |
-| Fly.io | 免费(3VM) | 不休眠 | 即时 | 生产环境(需信用卡验证) |
-| Railway | $5信用额 | 不休眠 | 即时 | 长期运行 |
-
-### 5. 场景视图 (Scenarios / +1)
-
-```mermaid
-stateDiagram-v2
-    [*] --> IDLE: 打开页面
-    IDLE --> CONNECTING: 点击"联系客服"
-    CONNECTING --> AI_ANSWERING: WS连接成功
-    AI_ANSWERING --> AI_ANSWERING: 用户说话/打字
-    AI_ANSWERING --> AI_ANSWERING: AI回复(文字+视频+音频)
-    AI_ANSWERING --> GOODBYE: 检测告别词
-    GOODBYE --> ENDED: 3s后自动挂断
-    ENDED --> IDLE: 返回初始界面
-    
-    AI_ANSWERING --> HUMAN_SERVING: 点击"转人工"
-    HUMAN_SERVING --> ENDED: 坐席挂断
-```
-
----
-
-## 🔧 技术栈
-
-| 层 | 技术 | 说明 |
-|---|------|------|
-| 前端框架 | React 19 + TypeScript | SPA, Vite 5 构建 |
-| 实时通信 | WebSocket (原生) | 自实现WS帧解析, zero deps |
-| 语音识别 | Web Speech API | 浏览器内置, Chrome/Edge |
-| 语音合成 | edge-tts (静态预生成) | 微软神经语音, 离线可运行 |
-| 流媒体 | SRS 5.0 + WebRTC | RTMP/WebRTC/HTTP-FLV |
-| 视频渲染 | Canvas2D + HTMLVideo | 零GPU, 全部浏览器侧 |
-| 部署 | Node.js (zero npm deps) | Render.com / Fly.io |
-| 视频生成 | Playwright + Canvas | 自动化截图/录屏 |
-
----
-
-## 🚀 快速启动
+### 安装
 
 ```bash
-# 1. 安装依赖
-cd web && npm install
+# 克隆项目
+cd ecommerce-video-cs
 
-# 2. 启动前端
-npx vite --port 5173
+# 创建虚拟环境
+python -m venv .venv
+.venv\Scripts\activate  # Windows
+# source .venv/bin/activate  # Linux/Mac
 
-# 3. 启动CC Mock (自动加载TTS缓存)
-node services/cc-mock/server.js
+# 安装依赖
+pip install -e .
 
-# 4. 打开浏览器
-# http://localhost:5173/customer
+# 复制环境配置
+cp .env.example .env
+# 编辑 .env 填入你的 API Keys
 ```
 
----
+### 运行
 
-## 📡 API 文档
+```bash
+# 开发模式（带热重载）
+python src/agent.py dev
 
-### WebSocket 消息协议
+# 或控制台模式（本地测试）
+python src/agent.py console
+```
 
-| 方向 | type | 说明 |
-|------|------|------|
-| C→S | `call` | 发起会话 |
-| C→S | `audio` | 发送语音/文字 `{text, sid}` |
-| C→S | `transfer` | 转人工 |
-| C→S | `end` | 结束会话 |
-| S→C | `room-ready` | 会话创建成功 |
-| S→C | `ai-answer` | AI文字回复 |
-| S→C | `tts-audio` | TTS音频(base64 mp3) |
-| S→C | `video-play` | 播放视频路径 |
-| S→C | `session-ended` | 会话结束 |
+### 启动 FastAPI 后端
 
-### 关键词路由
+```bash
+uvicorn api.server:app --host 0.0.0.0 --port 8000 --reload
 
-| 用户输入 | 回答视频 | TTS音频 |
-|---------|---------|--------|
-| "你好" / 其他 | greeting.webm | greeting.mp3 |
-| "理赔" / "报案" | claim-guide.webm | claim.mp3 |
-| "退保" / "退款" | refund-info.webm | refund.mp3 |
-| "续保" / "续费" | renewal-info.webm | renewal.mp3 |
-| "投保" / "保险" | insurance-intro.webm | insurance.mp3 |
-| "拜拜" / "再见" | 道别语 → 3s后挂断 | goodbye.mp3 |
+# API 端点：
+# POST /api/chat       — 发送消息获取AI回复
+# GET  /api/health     — 健康检查
+# GET  /api/metrics    — 系统指标
+# GET  /api/cost       — 成本追踪
+# POST /api/eval       — 运行评估
+# GET  /api/traces     — 查看追踪记录
+```
 
----
+### 启动前端
 
-## 🎯 核心设计决策
+```bash
+cd frontend
+npm install
+npm run dev
+# 访问 http://localhost:3000
+```
 
-1. **零GPU架构** — 所有ML模型不可用(无NVIDIA)，选择预生成视频+浏览器渲染方案
-2. **静态TTS预缓存** — 消除Python/edge-tts运行时依赖，启动即用
-3. **原生WebSocket** — 自实现WS帧解析(150行)，零npm依赖，极致轻量
-4. **Viseme口型系统** — 拼音韵母→5级口型(宽/圆/展/中/撮)，比随机正弦波真实10倍
+### 运行测试
 
----
+```bash
+.venv\Scripts\python.exe -m pytest tests/ -v
+# 117 passed
+```
 
-## 📋 Roadmap
+### 连接前端
 
-- [x] WebSocket实时对话 + 关键词路由
-- [x] 真人照片数字人 + Ken Burns动态
-- [x] 音素级Viseme口型同步
-- [x] TTS预缓存(69ms响应)
-- [x] 告别检测+自动挂断
-- [x] 打断AI说话
-- [x] 摄像头管理(启停推流)
-- [x] SRS WebRTC流媒体中继
-- [x] 一键Render.com部署
-- [ ] Wav2Lip真人级口型视频(需Colab GPU)
-- [ ] LLM接入(DeepSeek)替代关键词
-- [ ] 多轮对话上下文
-- [ ] 坐席WebRTC视频通话
+使用 [LiveKit Agents Playground](https://agents-playground.livekit.io) 连接测试：
 
----
+1. 打开 Playground
+2. 输入你的 LiveKit 项目 URL
+3. 点击 "Connect"
+4. 开始与AI客服对话！
 
-## 📄 License
+## 项目结构
 
-MIT © 2025
+```
+ecommerce-video-cs/
+├── src/
+│   ├── agent.py              # 主入口
+│   ├── agent/
+│   │   ├── ecommerce_agent.py  # 电商客服Agent (Function Calling)
+│   │   └── multi_agent.py      # Multi-Agent Supervisor
+│   ├── graph/
+│   │   └── workflow.py         # LangGraph StateGraph 工作流
+│   ├── api/
+│   │   └── server.py           # FastAPI REST API
+│   ├── tools/
+│   │   ├── product_tools.py    # 商品工具
+│   │   └── order_tools.py      # 订单工具
+│   ├── knowledge/
+│   │   └── rag_engine.py       # RAG知识引擎
+│   └── utils/
+│       ├── logging.py            # 结构化日志
+│       ├── resilience.py         # 熔断降级 + 模型降级链 (含Ollama)
+│       ├── security.py           # 加密 + 限流 + 敏感信息检测
+│       ├── monitoring.py         # 指标采集 + 告警 + 健康检查
+│       ├── backup.py             # 备份管理 + 会话归档
+│       ├── langsmith_integration.py  # LangSmith Tracing + Eval + Cost
+│       └── litellm_router.py     # LiteLLM 模型路由 + 成本优化
+├── frontend/                   # Next.js 14 React 前端
+│   ├── src/app/
+│   │   ├── layout.tsx
+│   │   └── page.tsx            # 聊天UI + 指标面板
+│   ├── next.config.js
+│   └── package.json
+├── data/
+│   ├── products/               # 商品数据
+│   └── knowledge_base/         # 知识库
+├── tests/                      # 测试（117项）
+├── docs/                       # 文档
+│   ├── demo.html               # 交互式演示 (v3.0)
+│   ├── screenshots/            # 操作截图
+│   ├── 操作指南.md             # 操作指南
+│   └── 生产就绪测试报告.md     # 生产就绪报告
+├── scripts/                    # 脚本
+├── _base-livekit/              # LiveKit Agents 上游（参考）
+├── pyproject.toml
+├── .env.example
+└── README.md
+```
+
+## 功能演示
+
+### 交互式演示页面
+
+打开 `docs/demo.html` 查看专业级交互式演示控制台 (v2.0)，包含：
+
+- 深色主题三栏布局（数字人客服 | 实时对话 | 工具与日志）
+- 4个业务场景一键演示（商品咨询、订单查询、退换货、智能推荐）
+- 6个生产保障演示（熔断降级、限流防护、安全检测、监控面板、备份恢复、健康检查）
+- 基础设施监控卡片（熔断器状态、限流计数、加密类型、健康评分）
+- 实时工具调用状态指示（绿色高亮）
+- 结构化日志面板（等宽字体，颜色分级）
+
+### 操作指南
+
+详见 [docs/操作指南.md](docs/操作指南.md)，包含13张完整界面截图、4个业务场景和6个生产保障模块的详细操作流程。
+
+### 商品咨询
+
+```
+客户：我想找一款适合跑步的耳机
+AI客服：好的，我为您推荐智能蓝牙耳机 Pro...
+```
+
+### 订单查询
+
+```
+客户：我的订单 ORD20240101001 到哪了？
+AI客服：您的订单已发货，顺丰速运承运...
+```
+
+### 退换货
+
+```
+客户：我想退掉刚收到的鞋子
+AI客服：好的，请问退换原因是什么？...
+```
+
+## 结构化日志（Structured Logging）
+
+本项目按照 [code-review.md](../../_upstream/activepieces-src/.agents/skills/review-logging-patterns/references/code-review.md) 的最佳实践，实现了 Python 版本的结构化日志模式：
+
+### 核心模式
+
+| 模式 | TypeScript/evlog | Python 实现 |
+|------|------------------|-------------|
+| 会话级日志 | `useLogger(event)` | `SessionLogger("name", **ctx)` |
+| 上下文累积 | `log.set({...})` | `log.set(key=value)` |
+| 宽事件输出 | 自动 `emit()` | `log.info("event")` 单行输出全部上下文 |
+| 结构化错误 | `createError({message, why, fix, cause})` | `AgentError.wrap(exc, message=, fix=, step=)` |
+
+### 示例
+
+```python
+from utils.logging import SessionLogger, AgentError
+
+# 会话级日志（类似 useLogger）
+log = SessionLogger("session", room=ctx.room.name)
+log.set(user={"id": customer_id})
+log.set(cart={"items": 3, "total": 299.00})
+log.info("checkout_completed", payment_method="alipay")
+# 输出: [session_started] {"room": "RM_abc", "user": {"id": "C001"}, "cart": {"items": 3, "total": 299.0}, "payment_method": "alipay"}
+
+# 结构化错误（类似 createError）
+try:
+    await process_order()
+except Exception as exc:
+    raise AgentError.wrap(
+        exc,
+        message="订单处理失败",
+        step="process_order",
+        fix="请检查订单数据后重试"
+    )
+```
+
+### 设计原则
+
+1. **单次输出**：每个操作只输出一条日志，包含所有累积的上下文（避免多条散乱的 log）
+2. **结构化错误**：错误包含 message（发生了什么）、why（根因）、fix（如何修复）、step（哪一步出错）
+3. **会话隔离**：每个客户会话有独立的 logger，上下文不会混淆
+4. **降级友好**：RAG 搜索失败时自动降级为关键词搜索，并记录 warning
+
+## 二次开发
+
+### 添加新工具
+
+在 `src/tools/` 下创建新工具文件，然后在 `ecommerce_agent.py` 中注册：
+
+```python
+@function_tool
+async def my_new_tool(self, context: RunContext, param: str) -> str:
+    """工具描述..."""
+    return "result"
+```
+
+### 扩展知识库
+
+在 `data/knowledge_base/` 添加 Markdown 文件，运行：
+
+```bash
+python scripts/ingest_knowledge.py
+```
+
+## 参考项目
+
+- [LiveKit Agents](https://github.com/livekit/agents) - 实时AI Agent框架
+- [LangChain](https://github.com/langchain-ai/langchain) - LLM应用开发框架
+
+## 许可
+
+MIT License
